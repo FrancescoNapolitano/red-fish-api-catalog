@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(#{ui.users}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title"><th:block th:text="#{ui.users}">Users</th:block></h1>
+            <p class="rf-page-subtitle"><th:block th:text="#{ui.manage.user.accounts.and.assigned.roles}">Manage user accounts and assigned roles</th:block></p>
+        </div>
+        <div class="rf-page-actions">
+            <a class="btn btn-sm btn-primary" th:href="@{/admin/users/new}">
+                <i class="bi bi-person-plus"></i> <th:block th:text="#{ui.new.user}">New user</th:block>
+            </a>
+        </div>
+    </div>
+
+    <div class="rf-panel">
+        <div class="table-responsive">
+            <table class="table rf-table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Username</th>
+                    <th><th:block th:text="#{ui.name}">Name</th:block></th>
+                    <th>Email</th>
+                    <th><th:block th:text="#{ui.roles}">Roles</th:block></th>
+                    <th><th:block th:text="#{ui.status}">Status</th:block></th>
+                    <th><th:block th:text="#{ui.last.sign.in}">Last sign-in</th:block></th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${users}">
+                    <td>
+                        <a th:href="@{/admin/users/{id}(id=${u.id})}" th:text="${u.username}"></a>
+                    </td>
+                    <td th:text="|${u.firstName} ${u.lastName}|"></td>
+                    <td class="rf-small">
+                        <a th:if="${u.email != null}" th:href="'mailto:' + ${u.email}" th:text="${u.email}"></a>
+                        <span th:if="${u.email == null}" class="rf-muted">—</span>
+                    </td>
+                    <td>
+                        <span class="rf-chip me-1" th:each="r : ${u.roles}" th:text="${r.name}"></span>
+                    </td>
+                    <td>
+                        <span class="badge" th:classappend="${u.enabled} ? 'text-bg-success' : 'text-bg-secondary'"
+                              th:text="${u.enabled} ? #{ui.active} : #{ui.disabled}"></span>
+                    </td>
+                    <td class="rf-small rf-muted"
+                        th:text="${u.lastLoginAt != null}
+                                 ? ${#temporals.format(u.lastLoginAt.atZone(T(java.time.ZoneId).systemDefault()), #messages.msg('format.datetime.short'))}
+                                 : #{ui.never}"></td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/admin/users/{id}(id=${u.id})}">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(#{ui.api.test}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title"><th:block th:text="#{ui.test.console}">Test console</th:block></h1>
+            <p class="rf-page-subtitle">
+                <th:block th:text="#{ui.requests.are.sent.from.the.application.server.so.browser.cors.restrict}">Requests are sent from the application server, so browser CORS restrictions do not apply. Configured timeout:</th:block> <span th:text="${timeoutSeconds}">30</span> <th:block th:text="#{ui.seconds}">seconds.</th:block>
+            </p>
+        </div>
+        <div class="rf-page-actions" th:if="${service != null}">
+            <a class="btn btn-sm btn-outline-secondary" th:href="@{/services/{id}(id=${service.id})}">
+                <i class="bi bi-arrow-left"></i> <span th:text="${service.name}"></span>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-5">
+            <div class="rf-panel">
+                <div class="rf-panel-header"><i class="bi bi-sliders"></i> <th:block th:text="#{ui.request}">Request</th:block></div>
+                <div class="rf-panel-body">
+                    <div class="mb-3" th:if="${!environments.isEmpty()}">
+                        <label class="form-label"><th:block th:text="#{ui.environment.base.urls}">Environment base URLs</th:block></label>
+                        <div class="d-flex flex-wrap gap-1">
+                            <button class="btn btn-sm btn-outline-secondary" type="button"
+                                    th:each="env : ${environments}" th:if="${env.baseUrl != null}"
+                                    th:attr="data-base-url=${env.baseUrl},data-endpoint-path=${endpoint != null ? endpoint.path : ''}"
+                                    onclick="document.getElementById('url').value=this.dataset.baseUrl.replace(/\/+$/, '') + this.dataset.endpointPath"
+                                    th:text="${env.name}"></button>
+                        </div>
+                    </div>
+
+                    <form th:action="@{/test/execute}" method="post" th:object="${testForm}">
+                        <input type="hidden" name="serviceId" th:if="${service != null}" th:value="${service.id}">
+                        <input type="hidden" name="endpointId" th:if="${endpoint != null}" th:value="${endpoint.id}">
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <label class="form-label" for="method"><th:block th:text="#{ui.method}">Method</th:block></label>
+                                <select class="form-select form-select-sm" id="method" th:field="*{method}">
+                                    <option th:each="m : ${ {'GET','POST','PUT','PATCH','DELETE'} }" th:value="${m}"
+                                            th:text="${m}"></option>
+                                </select>
+                            </div>
+                            <div class="col-8">
+                                <label class="form-label rf-required" for="url">URL</label>
+                                <input class="form-control form-control-sm rf-mono" id="url" th:field="*{url}"
+                                       required th:placeholder="#{ui.https.api.example.com.v1.resource}">
+                            </div>
+                            <div class="col-12" th:if="${#strings.isEmpty(testForm.url)}">
+                                <p class="form-text"><th:block th:text="#{ui.enter.the.full.request.url.no.address.is.configured}">Enter the full request URL: no address is configured.</th:block></p>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="queryParams">Query parameters</label>
+                                <textarea class="form-control form-control-sm rf-mono" id="queryParams"
+                                          th:field="*{queryParams}" rows="3"
+                                          placeholder="page: 0&#10;size: 20"></textarea>
+                                <div class="form-text"><th:block th:text="#{ui.one}">One</th:block> <code><th:block th:text="#{ui.name.value}">name: value</th:block></code> <th:block th:text="#{ui.pair.per.line}">pair per line.</th:block></div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="headers">Headers</label>
+                                <textarea class="form-control form-control-sm rf-mono" id="headers"
+                                          th:field="*{headers}" rows="4"
+                                          placeholder="Content-Type: application/json&#10;Authorization: Bearer …"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="body">Body</label>
+                                <textarea class="form-control form-control-sm rf-mono" id="body"
+                                          th:field="*{body}" rows="10" placeholder="{ }"></textarea>
+                                <div class="form-text"><th:block th:text="#{ui.ignored.for.get.and.delete}">Ignored for GET and DELETE.</th:block></div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mt-3">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-send"></i> <th:block th:text="#{ui.send.request}">Send request</th:block>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="rf-panel">
+                <div class="rf-panel-header"><i class="bi bi-arrow-return-left"></i> <th:block th:text="#{ui.response}">Response</th:block></div>
+                <div class="rf-panel-body">
+
+                    <div id="test-result">
+                        <th:block th:if="${response != null}">
+                            <th:block th:replace="~{test/result :: result}"></th:block>
+                        </th:block>
+                        <div class="rf-empty" th:if="${response == null}">
+                            <i class="bi bi-hourglass"></i>
+                            <th:block th:text="#{ui.no.request.sent.yet}">No request sent yet.</th:block>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

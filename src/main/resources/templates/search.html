@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(#{ui.search}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title"><th:block th:text="#{ui.global.search}">Global search</th:block></h1>
+            <p class="rf-page-subtitle" th:if="${results.query != null and !results.query.isEmpty()}">
+                <span th:text="${results.total()}">0</span> <th:block th:text="#{ui.results.on.this.page.for}">results on this page for «</th:block><span th:text="${results.query}"></span>»
+            </p>
+        </div>
+    </div>
+
+    <form class="rf-panel mb-3" th:action="@{/search}" method="get">
+        <div class="rf-panel-body">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input class="form-control" type="search" name="q" th:value="${query}" autofocus
+                       th:placeholder="#{ui.endpoint.path.service.group.description.tag.schema}">
+                <button class="btn btn-primary" type="submit"><th:block th:text="#{ui.search.2}">Search</th:block></button>
+            </div>
+            <div class="row g-2 mt-2">
+                <div class="col-md-4">
+                    <label class="form-label" for="groupId"><th:block th:text="#{ui.group.and.subgroups}">Group and subgroups</th:block></label>
+                    <select class="form-select" id="groupId" name="groupId">
+                        <option value=""><th:block th:text="#{ui.all.groups}">All groups</th:block></option>
+                        <option th:each="g : ${groupOptions}" th:value="${g.id}" th:text="${g.label}"
+                                th:selected="${filterGroup == g.id}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="type"><th:block th:text="#{ui.service.type}">Service type</th:block></label>
+                    <select class="form-select" id="type" name="type">
+                        <option value=""><th:block th:text="#{ui.all.types}">All types</th:block></option>
+                        <option th:each="t : ${serviceTypes}" th:value="${t}" th:text="${t.label}" th:selected="${filterType == t}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="status"><th:block th:text="#{ui.service.status}">Service status</th:block></label>
+                    <select class="form-select" id="status" name="status">
+                        <option value=""><th:block th:text="#{ui.all.statuses}">All statuses</th:block></option>
+                        <option th:each="s : ${serviceStatuses}" th:value="${s}" th:text="${s.label}" th:selected="${filterStatus == s}"></option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-text"><th:block th:text="#{ui.at.least.2.characters.endpoints.and.schemas.are.searched.in.the.curren}">At least 2 characters. Endpoints and schemas are searched in the current revision. Up to 20 results per section and page.</th:block></div>
+        </div>
+    </form>
+
+    <div class="rf-empty rf-panel" th:if="${query != null and !query.isEmpty() and results.empty}">
+        <i class="bi bi-search"></i> <th:block th:text="#{ui.no.results}">No results.</th:block>
+    </div>
+
+    <div class="row g-3">
+
+        <div class="col-12" th:if="${!results.services.isEmpty()}">
+            <div class="rf-panel">
+                <div class="rf-panel-header">
+                    <i class="bi bi-hdd-stack"></i> <th:block th:text="#{ui.services}">Services</th:block>
+                    <span class="badge text-bg-secondary" th:text="${results.services.size()}">0</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table rf-table table-hover mb-0">
+                        <tbody>
+                        <tr th:each="s : ${results.services}">
+                            <td>
+                                <a th:href="@{/services/{id}(id=${s.id})}" th:text="${s.name}"></a>
+                                <div class="rf-muted rf-small" th:if="${s.description != null}"
+                                     th:text="${#strings.abbreviate(s.description, 120)}"></div>
+                            </td>
+                            <td class="rf-small rf-muted" th:text="${s.group.path}"></td>
+                            <td><span class="rf-chip" th:text="${s.serviceType.label}"></span></td>
+                            <td>
+                                <span class="rf-tag me-1" th:each="t : ${s.tags}"
+                                      th:style="'background-color:' + ${t.color}" th:text="${t.name}"></span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12" th:if="${!results.endpoints.isEmpty()}">
+            <div class="rf-panel">
+                <div class="rf-panel-header">
+                    <i class="bi bi-signpost-split"></i> Endpoint
+                    <span class="badge text-bg-secondary" th:text="${results.endpoints.size()}">0</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table rf-table table-hover mb-0">
+                        <tbody>
+                        <tr th:each="e : ${results.endpoints}">
+                            <td style="width: 5rem">
+                                <th:block th:replace="~{fragments/schema :: method(${e.httpMethod})}"></th:block>
+                            </td>
+                            <td>
+                                <a class="rf-mono rf-small"
+                                   th:href="@{/services/{sid}/endpoints/{eid}(sid=${e.service.id},eid=${e.id})}"
+                                   th:text="${e.path}"></a>
+                                <div class="rf-muted rf-small" th:if="${e.summary != null}" th:text="${e.summary}"></div>
+                            </td>
+                            <td class="rf-small">
+                                <a th:href="@{/services/{id}(id=${e.service.id})}" th:text="${e.service.name}"></a>
+                                <div class="rf-muted" th:text="${e.service.group.path}"></div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6" th:if="${!results.groups.isEmpty()}">
+            <div class="rf-panel h-100">
+                <div class="rf-panel-header">
+                    <i class="bi bi-diagram-3"></i> <th:block th:text="#{ui.groups}">Groups</th:block>
+                    <span class="badge text-bg-secondary" th:text="${results.groups.size()}">0</span>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a class="list-group-item list-group-item-action" th:each="g : ${results.groups}"
+                       th:href="@{/catalog/{id}(id=${g.id})}">
+                        <span th:text="${g.name}"></span>
+                        <code class="rf-small rf-muted ms-1" th:text="${g.path}"></code>
+                        <div class="rf-muted rf-small" th:if="${g.description != null}"
+                             th:text="${#strings.abbreviate(g.description, 120)}"></div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6" th:if="${!results.models.isEmpty()}">
+            <div class="rf-panel h-100">
+                <div class="rf-panel-header">
+                    <i class="bi bi-braces"></i> <th:block th:text="#{ui.schemas.and.models}">Schemas and models</th:block>
+                    <span class="badge text-bg-secondary" th:text="${results.models.size()}">0</span>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a class="list-group-item list-group-item-action" th:each="m : ${results.models}"
+                       th:href="@{/services/{id}(id=${m.service.id})}">
+                        <span class="rf-mono" th:text="${m.name}"></span>
+                        <span class="rf-chip ms-1" th:text="${m.kind.label}"></span>
+                        <div class="rf-muted rf-small" th:text="${m.service.name} + ' · ' + ${m.service.group.path}"></div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12" th:if="${!results.tags.isEmpty()}">
+            <div class="rf-panel">
+                <div class="rf-panel-header"><i class="bi bi-tags"></i> Tag</div>
+                <div class="rf-panel-body d-flex flex-wrap gap-2">
+                    <span class="rf-tag" th:each="t : ${results.tags}"
+                          th:style="'background-color:' + ${t.color}" th:text="${t.name}"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <nav class="d-flex align-items-center justify-content-between mt-3" th:aria-label="#{ui.result.pages}"
+         th:if="${results.page &gt; 0 or results.hasNext}">
+        <a class="btn btn-outline-secondary" th:if="${results.page &gt; 0}"
+           th:href="@{/search(q=${query},groupId=${filterGroup},type=${filterType},status=${filterStatus},page=${results.page - 1})}"><th:block th:text="#{ui.previous}">Previous</th:block></a>
+        <span th:text="#{ui.page.number(${results.page + 1})}"></span>
+        <a class="btn btn-outline-primary" th:if="${results.hasNext}"
+           th:href="@{/search(q=${query},groupId=${filterGroup},type=${filterType},status=${filterStatus},page=${results.page + 1})}"><th:block th:text="#{ui.next}">Next</th:block></a>
+    </nav>
+</section>
+</body>
+</html>

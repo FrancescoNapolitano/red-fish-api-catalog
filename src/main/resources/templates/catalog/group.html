@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(${group.name}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title" th:text="${group.name}">Gruppo</h1>
+            <p class="rf-page-subtitle">
+                <code th:text="${group.path}"></code>
+                <span th:if="${group.description != null}" th:text="' · ' + ${group.description}"></span>
+            </p>
+        </div>
+        <div class="rf-page-actions">
+            <a class="btn btn-sm btn-outline-secondary" th:href="@{/catalog/new(parentId=${group.id})}"
+               th:if="${@perm.hasOnGroup('GROUP_CREATE', group)}">
+                <i class="bi bi-folder-plus"></i> <th:block th:text="#{ui.subgroup}">Subgroup</th:block>
+            </a>
+            <a class="btn btn-sm btn-outline-secondary" th:href="@{/services/new(groupId=${group.id})}"
+               th:if="${@perm.hasOnGroup('SERVICE_CREATE', group)}">
+                <i class="bi bi-plus-lg"></i> <th:block th:text="#{ui.service}">Service</th:block>
+            </a>
+            <a class="btn btn-sm btn-primary" th:href="@{/import(groupId=${group.id})}"
+               th:if="${@perm.hasOnGroup('IMPORT_SWAGGER', group) or @perm.hasOnGroup('IMPORT_GRPC', group)}">
+                <i class="bi bi-cloud-arrow-up"></i> <th:block th:text="#{ui.import}">Import</th:block>
+            </a>
+            <a class="btn btn-sm btn-outline-secondary" th:href="@{/catalog/{id}/edit(id=${group.id})}"
+               th:if="${@perm.hasOnGroup('GROUP_EDIT', group)}">
+                <i class="bi bi-pencil"></i>
+            </a>
+            <form th:action="@{/catalog/{id}/delete(id=${group.id})}" method="post" class="d-inline"
+                  th:if="${@perm.hasOnGroup('GROUP_DELETE', group)}">
+                <button class="btn btn-sm btn-outline-danger" type="submit"
+                        th:attr="data-confirm=#{ui.delete.group.2} + ${group.name} + #{ui.and.its.subgroups.2}">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3">
+
+        <div class="col-lg-4" th:if="${!children.isEmpty()}">
+            <div class="rf-panel h-100">
+                <div class="rf-panel-header"><i class="bi bi-diagram-2"></i> <th:block th:text="#{ui.subgroups}">Subgroups</th:block></div>
+                <div class="list-group list-group-flush">
+                    <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
+                       th:each="c : ${children}" th:href="@{/catalog/{id}(id=${c.id})}">
+                        <i class="bi bi-folder"></i>
+                        <span th:text="${c.name}"></span>
+                        <span class="rf-muted rf-small ms-auto" th:text="${c.slug}"></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div th:class="${children.isEmpty()} ? 'col-12' : 'col-lg-8'">
+            <div class="rf-panel h-100">
+                <div class="rf-panel-header">
+                    <i class="bi bi-hdd-stack"></i> <th:block th:text="#{ui.services.in.this.group}">Services in this group</th:block>
+                    <span class="rf-muted rf-small ms-auto" th:text="${services.size()} + #{ui.items.2}"></span>
+                </div>
+                <div class="table-responsive" th:if="${!services.isEmpty()}">
+                    <table class="table rf-table table-hover mb-0">
+                        <thead>
+                        <tr>
+                            <th><th:block th:text="#{ui.name}">Name</th:block></th>
+                            <th><th:block th:text="#{ui.type}">Type</th:block></th>
+                            <th><th:block th:text="#{ui.version}">Version</th:block></th>
+                            <th>Tag</th>
+                            <th><th:block th:text="#{ui.status}">Status</th:block></th>
+                            <th><th:block th:text="#{ui.last.import}">Last import</th:block></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="s : ${services}">
+                            <td>
+                                <a th:href="@{/services/{id}(id=${s.id})}" th:text="${s.name}"></a>
+                                <div class="rf-muted rf-small" th:if="${s.description != null}"
+                                     th:text="${#strings.abbreviate(s.description, 90)}"></div>
+                            </td>
+                            <td><span class="rf-chip" th:text="${s.serviceType.label}"></span></td>
+                            <td class="rf-small" th:text="${s.version != null} ? ${s.version} : '—'"></td>
+                            <td>
+                                <span class="rf-tag me-1" th:each="t : ${s.tags}"
+                                      th:style="'background-color:' + ${t.color}" th:text="${t.name}"></span>
+                            </td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${s.deprecated} ? 'text-bg-danger' : 'text-bg-success'"
+                                      th:text="${s.status.label}"></span>
+                            </td>
+                            <td class="rf-small rf-muted"
+                                th:text="${s.importedAt != null}
+                                         ? ${#temporals.format(s.importedAt.atZone(T(java.time.ZoneId).systemDefault()), #messages.msg('format.datetime.short'))}
+                                         : '—'"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="rf-empty" th:if="${services.isEmpty()}">
+                    <i class="bi bi-inbox"></i> <th:block th:text="#{ui.no.services.in.this.group}">No services in this group.</th:block>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8" th:if="${group.documentation != null}">
+            <div class="rf-panel h-100">
+                <div class="rf-panel-header"><i class="bi bi-file-text"></i> <th:block th:text="#{ui.documentation}">Documentation</th:block></div>
+                <div class="rf-panel-body">
+                    <pre class="rf-code rf-code-wrap" style="border:0;background:transparent;padding:0"
+                         th:text="${group.documentation}"></pre>
+                </div>
+            </div>
+        </div>
+
+        <div th:class="${group.documentation != null} ? 'col-lg-4' : 'col-lg-6'">
+            <div class="rf-panel h-100">
+                <div class="rf-panel-header"><i class="bi bi-person-lines-fill"></i> <th:block th:text="#{ui.contacts}">Contacts</th:block></div>
+                <div class="list-group list-group-flush" th:if="${!contacts.isEmpty()}">
+                    <div class="list-group-item" th:each="c : ${contacts}">
+                        <div class="d-flex align-items-start gap-2">
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold" th:text="${c.name}"></div>
+                                <div class="rf-small">
+                                    <a th:if="${c.email != null}" th:href="'mailto:' + ${c.email}"
+                                       th:text="${c.email}"></a>
+                                    <span class="rf-muted" th:if="${c.team != null}" th:text="' · ' + ${c.team}"></span>
+                                </div>
+                                <div class="rf-muted rf-small" th:if="${c.notes != null}" th:text="${c.notes}"></div>
+                            </div>
+                            <form th:action="@{/catalog/{gid}/contacts/{cid}/delete(gid=${group.id},cid=${c.id})}"
+                                  method="post" th:if="${@perm.hasOnGroup('GROUP_EDIT', group)}">
+                                <button class="btn btn-sm btn-link text-danger py-0" type="submit"
+                                        th:data-confirm="#{ui.remove.this.contact}">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <p class="rf-muted rf-small px-3 pt-3 mb-0" th:if="${contacts.isEmpty()}">
+                    <th:block th:text="#{ui.no.contacts.specified}">No contacts specified.</th:block>
+                </p>
+
+                <div class="rf-panel-body border-top" th:if="${@perm.hasOnGroup('GROUP_EDIT', group)}">
+                    <form th:action="@{/catalog/{id}/contacts(id=${group.id})}" th:object="${contactForm}"
+                          method="post" class="row g-2">
+                        <div class="col-md-6">
+                            <input class="form-control form-control-sm" type="text" th:field="*{name}"
+                                   th:placeholder="#{ui.contact.name}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <input class="form-control form-control-sm" type="email" th:field="*{email}"
+                                   placeholder="Email">
+                        </div>
+                        <div class="col-md-6">
+                            <input class="form-control form-control-sm" type="text" th:field="*{team}"
+                                   placeholder="Team">
+                        </div>
+                        <div class="col-md-6">
+                            <input class="form-control form-control-sm" type="text" th:field="*{notes}"
+                                   th:placeholder="#{ui.notes}">
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-sm btn-outline-primary" type="submit">
+                                <i class="bi bi-person-plus"></i> <th:block th:text="#{ui.add.contact}">Add contact</th:block>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

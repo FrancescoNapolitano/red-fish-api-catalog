@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(#{ui.models.and.schemas}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title"><th:block th:text="#{ui.models.and.schemas}">Models and schemas</th:block></h1>
+            <p class="rf-page-subtitle">
+                <span th:text="${service.name}">Servizio</span>
+                <span th:if="${selectedVersion != null}"
+                      th:text="#{ui.revision.2} + ${selectedVersion.displayLabel}"></span>
+                <span th:if="${endpoint != null}">
+                    <th:block th:text="#{ui.used.by}">· used by</th:block>
+                    <span class="rf-mono" th:text="${endpoint.httpMethod} + ' ' + ${endpoint.path}"></span>
+                </span>
+            </p>
+        </div>
+        <div class="rf-page-actions">
+            <a class="btn btn-sm btn-outline-secondary" th:href="@{/services/{id}(id=${service.id})}">
+                <i class="bi bi-arrow-left"></i> <th:block th:text="#{ui.back.to.service}">Back to service</th:block>
+            </a>
+            <a class="btn btn-sm btn-outline-secondary" th:if="${endpoint != null}"
+               th:href="@{/services/{id}/models(id=${service.id})}">
+                <i class="bi bi-collection"></i>
+                <th:block th:text="#{ui.all.models}">All models</th:block> <span th:text="'(' + ${totalCount} + ')'"></span>
+            </a>
+        </div>
+    </div>
+
+    <div class="rf-panel">
+        <div class="rf-panel-header">
+            <i class="bi bi-braces"></i>
+            <span th:if="${endpoint == null}"><th:block th:text="#{ui.all.models.in.this.revision}">All models in this revision</th:block></span>
+            <span th:if="${endpoint != null}"><th:block th:text="#{ui.models.used.by.this.endpoint}">Models used by this endpoint</th:block></span>
+            <span class="badge text-bg-secondary" th:text="${models.size()}">0</span>
+        </div>
+
+        <div class="table-responsive" th:if="${!models.isEmpty()}">
+            <table class="table rf-table table-sm mb-0">
+                <thead>
+                <tr>
+                    <th><th:block th:text="#{ui.name}">Name</th:block></th>
+                    <th><th:block th:text="#{ui.type}">Type</th:block></th>
+                    <th><th:block th:text="#{ui.description}">Description</th:block></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="m : ${models}">
+                    <td>
+                        <a class="rf-mono"
+                           th:href="@{/services/{sid}/models/{mid}(sid=${service.id},mid=${m.id})}"
+                           th:text="${m.name}">Nome</a>
+                    </td>
+                    <td>
+                        <span class="rf-chip">
+                            <i class="bi" th:classappend="${m.kind.name() == 'ENUM'} ? 'bi-list-ol' : 'bi-box'"></i>
+                            <span th:text="${m.kind.label}">Schema</span>
+                        </span>
+                    </td>
+                    <td class="rf-small rf-muted" th:text="${m.description}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="rf-empty" th:if="${models.isEmpty()}">
+            <i class="bi bi-braces"></i>
+            <span th:if="${selectedVersion == null}"><th:block th:text="#{ui.this.service.has.no.imported.specification.yet}">This service has no imported specification yet.</th:block></span>
+            <span th:if="${selectedVersion != null and endpoint != null}">
+                <th:block th:text="#{ui.this.endpoint.does.not.reference.any.models}">This endpoint does not reference any models.</th:block>
+            </span>
+            <span th:if="${selectedVersion != null and endpoint == null}">
+                <th:block th:text="#{ui.this.revision.has.no.models}">This revision has no models.</th:block>
+            </span>
+        </div>
+    </div>
+</section>
+</body>
+</html>

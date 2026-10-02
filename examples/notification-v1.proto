@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package notification.v1;
+
+import "google/protobuf/timestamp.proto";
+
+enum Channel {
+  CHANNEL_UNSPECIFIED = 0;
+  EMAIL = 1;
+  SMS = 2;
+  PUSH = 3;
+}
+
+message SendRequest {
+  string recipient = 1;
+  Channel channel = 2;
+  string subject = 3;
+  string body = 4;
+  repeated string attachments = 5;
+  map<string, string> metadata = 6;
+
+  oneof priority {
+    bool urgent = 7;
+    int32 delay_seconds = 8;
+  }
+}
+
+message SendResponse {
+  string message_id = 1;
+  bool accepted = 2;
+  string error = 3;
+}
+
+message StatusRequest {
+  string message_id = 1;
+}
+
+message StatusResponse {
+  string message_id = 1;
+  Status status = 2;
+
+  enum Status {
+    UNKNOWN = 0;
+    QUEUED = 1;
+    SENT = 2;
+    FAILED = 3;
+  }
+}
+
+service NotificationService {
+  rpc Send (SendRequest) returns (SendResponse);
+
+  rpc SendBatch (stream SendRequest) returns (SendResponse);
+
+  rpc WatchStatus (StatusRequest) returns (stream StatusResponse);
+
+  rpc GetStatus (StatusRequest) returns (StatusResponse);
+}

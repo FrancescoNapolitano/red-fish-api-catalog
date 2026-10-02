@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(${user.username}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title" th:text="${user.displayName}">Utente</h1>
+            <p class="rf-page-subtitle">
+                <span class="rf-mono" th:text="${user.username}"></span> ·
+                <span class="badge" th:classappend="${user.enabled} ? 'text-bg-success' : 'text-bg-secondary'"
+                      th:text="${user.enabled} ? #{ui.active} : #{ui.disabled}"></span>
+            </p>
+        </div>
+        <div class="rf-page-actions">
+            <form th:action="@{/admin/users/{id}/enabled(id=${user.id})}" method="post" class="d-inline">
+                <input type="hidden" name="enabled" th:value="${!user.enabled}">
+                <button class="btn btn-sm btn-outline-secondary" type="submit">
+                    <i class="bi" th:classappend="${user.enabled} ? 'bi-pause-circle' : 'bi-play-circle'"></i>
+                    <span th:text="${user.enabled} ? #{ui.disable} : #{ui.enable}"></span>
+                </button>
+            </form>
+            <form th:action="@{/admin/users/{id}/delete(id=${user.id})}" method="post" class="d-inline">
+                <button class="btn btn-sm btn-outline-danger" type="submit"
+                        th:attr="data-confirm=#{ui.delete.user.confirm(${user.username})}">
+                    <i class="bi bi-trash"></i> <th:block th:text="#{ui.delete}">Delete</th:block>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3">
+
+        <div class="col-lg-6">
+            <div class="rf-panel h-100">
+                <div class="rf-panel-header"><i class="bi bi-person"></i> <th:block th:text="#{ui.profile.and.roles}">Profile and roles</th:block></div>
+                <div class="rf-panel-body">
+                    <form th:action="@{/admin/users/{id}(id=${user.id})}" th:object="${userForm}" method="post"
+                          novalidate>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label rf-required" for="username">Username</label>
+                                <input class="form-control" id="username" type="text" th:field="*{username}" required>
+                                <div class="text-danger rf-small" th:if="${#fields.hasErrors('username')}"
+                                     th:errors="*{username}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="email">Email</label>
+                                <input class="form-control" id="email" type="email" th:field="*{email}">
+                                <div class="text-danger rf-small" th:if="${#fields.hasErrors('email')}"
+                                     th:errors="*{email}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label rf-required" for="firstName"><th:block th:text="#{ui.name}">Name</th:block></label>
+                                <input class="form-control" id="firstName" type="text" th:field="*{firstName}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label rf-required" for="lastName"><th:block th:text="#{ui.last.name}">Last name</th:block></label>
+                                <input class="form-control" id="lastName" type="text" th:field="*{lastName}" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label"><th:block th:text="#{ui.roles}">Roles</th:block></label>
+                                <div class="form-check" th:each="r : ${roles}">
+                                    <input class="form-check-input" type="checkbox" th:field="*{roleIds}"
+                                           th:value="${r.id}" th:id="'role-' + ${r.id}">
+                                    <label class="form-check-label" th:for="'role-' + ${r.id}">
+                                        <span th:text="${r.name}"></span>
+                                        <span class="rf-muted rf-small" th:text="${r.description}"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" id="enabled" type="checkbox" th:field="*{enabled}">
+                                    <label class="form-check-label" for="enabled"><th:block th:text="#{ui.active.user}">Active user</th:block></label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" id="mustChangePassword" type="checkbox"
+                                           th:field="*{mustChangePassword}">
+                                    <label class="form-check-label" for="mustChangePassword">
+                                        <th:block th:text="#{ui.must.change.password.at.next.sign.in}">Must change password at next sign-in</th:block>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary mt-3" type="submit">
+                            <i class="bi bi-check2"></i> <th:block th:text="#{ui.save.changes}">Save changes</th:block>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="rf-panel mb-3">
+                <div class="rf-panel-header"><i class="bi bi-key"></i> <th:block th:text="#{ui.reset.password}">Reset password</th:block></div>
+                <div class="rf-panel-body">
+                    <form th:action="@{/admin/users/{id}/password(id=${user.id})}" method="post">
+                        <div class="mb-2">
+                            <label class="form-label" for="newPassword"><th:block th:text="#{ui.new.password}">New password</th:block></label>
+                            <input class="form-control rf-mono" id="newPassword" name="newPassword" type="text"
+                                   th:placeholder="#{ui.leave.blank.to.generate.automatically}" minlength="8">
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" id="mustChange" name="mustChange" type="checkbox"
+                                   value="true" checked>
+                            <label class="form-check-label" for="mustChange">
+                                <th:block th:text="#{ui.require.a.password.change.at.next.sign.in}">Require a password change at next sign-in</th:block>
+                            </label>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm" type="submit"
+                                th:data-confirm="#{ui.reset.this.user.s.password}">
+                            <i class="bi bi-arrow-repeat"></i> <th:block th:text="#{ui.reset}">Reset</th:block>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="rf-panel">
+                <div class="rf-panel-header"><i class="bi bi-info-circle"></i> <th:block th:text="#{ui.information}">Information</th:block></div>
+                <div class="rf-panel-body">
+                    <dl class="rf-kv mb-0">
+                        <dt><th:block th:text="#{ui.created}">Created</th:block></dt>
+                        <dd th:text="${#temporals.format(user.createdAt.atZone(T(java.time.ZoneId).systemDefault()), #messages.msg('format.datetime.short'))}"></dd>
+                        <dt><th:block th:text="#{ui.last.sign.in}">Last sign-in</th:block></dt>
+                        <dd th:text="${user.lastLoginAt != null}
+                                     ? ${#temporals.format(user.lastLoginAt.atZone(T(java.time.ZoneId).systemDefault()), #messages.msg('format.datetime.short'))}
+                                     : #{ui.never}"></dd>
+                        <dt><th:block th:text="#{ui.global.permissions}">Global permissions</th:block></dt>
+                        <dd>
+                            <span class="rf-chip me-1 mb-1 d-inline-flex"
+                                  th:each="p : ${user.effectivePermissions()}" th:text="${p}"></span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="rf-panel">
+                <div class="rf-panel-header">
+                    <i class="bi bi-diagram-3"></i> <th:block th:text="#{ui.group.permissions}">Group permissions</th:block>
+                    <span class="rf-muted rf-small ms-2">
+                        <th:block th:text="#{ui.apply.to.the.selected.group.and.all.its.subgroups}">apply to the selected group and all its subgroups</th:block>
+                    </span>
+                </div>
+                <div class="rf-panel-body">
+                    <form class="row g-2 align-items-end mb-3"
+                          th:action="@{/admin/users/{id}/group-permissions(id=${user.id})}" method="post">
+                        <div class="col-md-5">
+                            <label class="form-label" for="groupId"><th:block th:text="#{ui.group}">Group</th:block></label>
+                            <select class="form-select" id="groupId" name="groupId" required>
+                                <option value=""><th:block th:text="#{ui.select}">— select —</th:block></option>
+                                <option th:each="g : ${groupOptions}" th:value="${g.id}"
+                                        th:text="${g.label}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label" for="permissionCode"><th:block th:text="#{ui.permission}">Permission</th:block></label>
+                            <select class="form-select" id="permissionCode" name="permissionCode" required>
+                                <option value=""><th:block th:text="#{ui.select}">— select —</th:block></option>
+                                <option th:each="p : ${scopedPermissions}" th:value="${p.code}"
+                                        th:text="|${p.label} (${p.code})|"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-primary w-100" type="submit">
+                                <i class="bi bi-plus-lg"></i> <th:block th:text="#{ui.assign}">Assign</th:block>
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive" th:if="${!groupPermissions.isEmpty()}">
+                        <table class="table rf-table table-sm mb-0">
+                            <thead>
+                            <tr>
+                                <th><th:block th:text="#{ui.group}">Group</th:block></th>
+                                <th><th:block th:text="#{ui.permission}">Permission</th:block></th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="gp : ${groupPermissions}">
+                                <td class="rf-mono rf-small" th:text="${gp.group.path}"></td>
+                                <td><span class="rf-chip" th:text="${gp.permissionCode}"></span></td>
+                                <td class="text-end">
+                                    <form th:action="@{/admin/users/{uid}/group-permissions/{aid}/delete(uid=${user.id},aid=${gp.id})}"
+                                          method="post" class="d-inline">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit"
+                                                th:data-confirm="#{ui.revoke.this.permission}">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="rf-muted rf-small mb-0" th:if="${groupPermissions.isEmpty()}">
+                        <th:block th:text="#{ui.no.specific.permissions.assigned.only.role.permissions.apply}">No specific permissions assigned: only role permissions apply.</th:block>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

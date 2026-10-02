@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="page(pageTitle, content)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null} ? ${_csrf.token} : ''">
+    <meta name="_csrf_header" th:content="${_csrf != null} ? ${_csrf.headerName} : 'X-CSRF-TOKEN'">
+    <title th:text="|${pageTitle} · ${appName}|">API Catalog</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="icon" th:href="@{/img/favicon.svg}" type="image/svg+xml">
+    <script th:src="@{/js/app.js}"></script>
+</head>
+
+<body>
+<div class="rf-shell">
+
+    <aside class="rf-sidebar">
+        <a class="rf-brand" th:href="@{/}">
+            <img th:if="${appLogoPath != null and !appLogoPath.isEmpty()}" class="rf-brand-logo"
+                 th:src="@{/branding/logo}" alt="logo">
+            <span th:if="${appLogoPath == null or appLogoPath.isEmpty()}" class="rf-brand-mark">
+                <i class="bi bi-diagram-3-fill"></i>
+            </span>
+            <span th:text="${appName}">API Catalog</span>
+        </a>
+
+        <nav class="rf-nav">
+            <a class="rf-nav-link" th:href="@{/}"
+               th:classappend="${requestUri == '/' ? 'active' : ''}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            <a class="rf-nav-link" th:href="@{/search}"
+               th:classappend="${#strings.startsWith(requestUri, '/search') ? 'active' : ''}">
+                <i class="bi bi-search"></i> <th:block th:text="#{ui.global.search}">Global search</th:block>
+            </a>
+            <a class="rf-nav-link" th:href="@{/favorites}"
+               th:classappend="${#strings.startsWith(requestUri, '/favorites') ? 'active' : ''}">
+                <i class="bi bi-star"></i> <th:block th:text="#{ui.favorites}">Favorites</th:block>
+            </a>
+            <a class="rf-nav-link" th:href="@{/services}"
+               th:classappend="${requestUri == '/services' ? 'active' : ''}">
+                <i class="bi bi-hdd-stack"></i> <th:block th:text="#{ui.all.services}">All services</th:block>
+            </a>
+
+            <div class="rf-nav-section"><th:block th:text="#{ui.catalog}">Catalog</th:block></div>
+            <a class="rf-nav-link" th:href="@{/catalog}"
+               th:classappend="${requestUri == '/catalog' ? 'active' : ''}">
+                <i class="bi bi-diagram-3"></i> <th:block th:text="#{ui.full.structure}">Full structure</th:block>
+            </a>
+            <div style="padding: .15rem .6rem .25rem">
+                <th:block th:replace="~{fragments/tree :: nodes(${sidebarTree}, ${activeGroupPath})}"></th:block>
+                <p class="rf-muted rf-small" style="padding: .35rem .6rem 0; margin: 0"
+                   th:if="${sidebarTree == null or sidebarTree.isEmpty()}">
+                    <th:block th:text="#{ui.no.groups.yet}">No groups yet.</th:block>
+                </p>
+            </div>
+
+            <th:block th:if="${@perm.hasAnywhere('IMPORT_SWAGGER') or @perm.hasAnywhere('IMPORT_GRPC')}">
+                <div class="rf-nav-section">Import</div>
+                <a class="rf-nav-link" th:href="@{/import}"
+                   th:classappend="${#strings.startsWith(requestUri, '/import') ? 'active' : ''}">
+                    <i class="bi bi-cloud-arrow-up"></i> <th:block th:text="#{ui.import.specification}">Import specification</th:block>
+                </a>
+            </th:block>
+
+            <th:block th:if="${@perm.has('USER_MANAGE') or @perm.has('PERMISSION_MANAGE') or @perm.has('SETTINGS_MANAGE')}">
+                <div class="rf-nav-section"><th:block th:text="#{ui.administration}">Administration</th:block></div>
+                <a class="rf-nav-link" th:if="${@perm.has('USER_MANAGE')}" th:href="@{/admin/users}"
+                   th:classappend="${#strings.startsWith(requestUri, '/admin/users') ? 'active' : ''}">
+                    <i class="bi bi-people"></i> <th:block th:text="#{ui.users}">Users</th:block>
+                </a>
+                <a class="rf-nav-link" th:if="${@perm.has('PERMISSION_MANAGE')}" th:href="@{/admin/roles}"
+                   th:classappend="${#strings.startsWith(requestUri, '/admin/roles') ? 'active' : ''}">
+                    <i class="bi bi-shield-lock"></i> <th:block th:text="#{ui.roles.and.permissions}">Roles and permissions</th:block>
+                </a>
+                <a class="rf-nav-link" th:if="${@perm.has('SETTINGS_MANAGE')}" th:href="@{/admin/settings}"
+                   th:classappend="${#strings.startsWith(requestUri, '/admin/settings') ? 'active' : ''}">
+                    <i class="bi bi-sliders"></i> <th:block th:text="#{ui.settings}">Settings</th:block>
+                </a>
+                <a class="rf-nav-link" th:if="${@perm.has('USER_MANAGE') or @perm.has('PERMISSION_MANAGE')}"
+                   th:href="@{/admin/audit}"
+                   th:classappend="${#strings.startsWith(requestUri, '/admin/audit') ? 'active' : ''}">
+                    <i class="bi bi-journal-text"></i> Audit log
+                </a>
+            </th:block>
+        </nav>
+    </aside>
+
+    <div class="rf-main">
+        <header class="rf-topbar">
+            <button class="btn btn-sm btn-outline-secondary d-lg-none" type="button" data-action="toggle-sidebar"
+                    th:aria-label="#{ui.open.menu}">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <form class="flex-grow-1" style="max-width: 34rem" th:action="@{/search}" method="get" role="search">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input class="form-control" type="search" name="q" th:value="${param.q}"
+                           th:placeholder="#{ui.search.services.endpoints.paths.tags.schemas}" th:aria-label="#{ui.search}">
+                </div>
+            </form>
+
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <th:block th:replace="~{fragments/language :: selector}"></th:block>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-action="toggle-theme"
+                        th:title="#{ui.switch.theme}">
+                    <i class="bi bi-moon-stars" data-theme-icon></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle"></i>
+                        <span class="d-none d-sm-inline"
+                              th:text="${currentUser != null} ? ${currentUser.displayName} : #{ui.guest}">Utente</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <span class="dropdown-item-text rf-small rf-muted"
+                                  th:text="${currentUser != null} ? ${currentUser.username} : ''"></span>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" th:href="@{/account/password}">
+                            <i class="bi bi-key"></i> <th:block th:text="#{ui.change.password}">Change password</th:block></a></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post">
+                                <button class="dropdown-item" type="submit">
+                                    <i class="bi bi-box-arrow-right"></i> <th:block th:text="#{ui.sign.out}">Sign out</th:block>
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <main class="rf-content">
+            <nav aria-label="breadcrumb" th:if="${breadcrumb != null and !breadcrumb.isEmpty()}">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item" th:each="item : ${breadcrumb}"
+                        th:classappend="${item.url == null ? 'active' : ''}"
+                        th:attr="aria-current=${item.url == null ? 'page' : null}">
+                        <a th:if="${item.url != null}" th:href="${item.url}" th:text="${item.label}">voce</a>
+                        <span th:if="${item.url == null}" th:text="${item.label}">voce</span>
+                    </li>
+                </ol>
+            </nav>
+
+            <div class="alert alert-success alert-dismissible" role="alert" data-autodismiss
+                 th:if="${successMessage != null}">
+                <i class="bi bi-check-circle"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" th:aria-label="#{ui.close}"></button>
+            </div>
+            <div class="alert alert-danger alert-dismissible" role="alert" th:if="${errorMessage != null}">
+                <i class="bi bi-exclamation-triangle"></i> <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" th:aria-label="#{ui.close}"></button>
+            </div>
+            <div class="alert alert-info alert-dismissible" role="alert" data-autodismiss
+                 th:if="${infoMessage != null}">
+                <i class="bi bi-info-circle"></i> <span th:utext="${infoMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" th:aria-label="#{ui.close}"></button>
+            </div>
+
+            <th:block th:replace="${content}"></th:block>
+        </main>
+    </div>
+</div>
+
+<script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

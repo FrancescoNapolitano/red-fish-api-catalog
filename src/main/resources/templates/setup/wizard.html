@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/plain :: page(#{ui.initial.setup}, ~{::section})}">
+<body>
+<section class="rf-card-wide">
+    <div class="rf-panel">
+        <div class="rf-panel-header">
+            <i class="bi bi-magic"></i> <th:block th:text="#{ui.initial.setup}">Initial setup</th:block>
+        </div>
+        <div class="rf-panel-body">
+
+            <div class="rf-steps">
+                <div class="rf-step" th:classappend="${step == 1} ? 'active' : 'done'">
+                    <span class="rf-step-index">1</span> <th:block th:text="#{ui.application.and.administrator}">Application and administrator</th:block>
+                </div>
+                <div class="rf-step" th:classappend="${step == 2} ? 'active' : ''">
+                    <span class="rf-step-index">2</span> <th:block th:text="#{ui.summary}">Summary</th:block>
+                </div>
+            </div>
+
+            <div class="alert alert-danger py-2 rf-small" th:if="${errorMessage != null}"
+                 th:text="${errorMessage}"></div>
+
+            <form th:if="${step == 1}" th:action="@{/setup/step1}" th:object="${setupForm}" method="post" novalidate>
+                <p class="rf-muted rf-small">
+                    <th:block th:text="#{ui.welcome.the.catalog.has.not.been.configured.yet.complete.these.two.ste}">Welcome. The catalog has not been configured yet: complete these two steps to get started. Access remains restricted until setup is complete.</th:block>
+                </p>
+
+                <div class="mb-3">
+                    <label class="form-label rf-required" for="appName"><th:block th:text="#{ui.application.name.2}">Application name</th:block></label>
+                    <input class="form-control" id="appName" type="text" th:field="*{appName}" required>
+                    <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('appName')}"
+                         th:errors="*{appName}"></div>
+                    <div class="form-text"><th:block th:text="#{ui.displayed.in.the.sidebar.and.page.titles}">Displayed in the sidebar and page titles.</th:block></div>
+                </div>
+
+                <p class="rf-muted rf-small">
+                    <th:block th:text="#{ui.create.the.first.administrator.with.full.permissions.including.user.an}">Create the first administrator, with full permissions including user and role management.</th:block>
+                </p>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label rf-required" for="adminUsername">Username</label>
+                        <input class="form-control" id="adminUsername" type="text" th:field="*{adminUsername}"
+                               autocomplete="off" required>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('adminUsername')}"
+                             th:errors="*{adminUsername}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label rf-required" for="adminEmail">Email</label>
+                        <input class="form-control" id="adminEmail" type="email" th:field="*{adminEmail}" required>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('adminEmail')}"
+                             th:errors="*{adminEmail}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label rf-required" for="adminFirstName"><th:block th:text="#{ui.name}">Name</th:block></label>
+                        <input class="form-control" id="adminFirstName" type="text" th:field="*{adminFirstName}"
+                               required>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('adminFirstName')}"
+                             th:errors="*{adminFirstName}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label rf-required" for="adminLastName"><th:block th:text="#{ui.last.name}">Last name</th:block></label>
+                        <input class="form-control" id="adminLastName" type="text" th:field="*{adminLastName}" required>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('adminLastName')}"
+                             th:errors="*{adminLastName}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label rf-required" for="adminPassword">Password</label>
+                        <input class="form-control" id="adminPassword" type="password" th:field="*{adminPassword}"
+                               autocomplete="new-password" required>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('adminPassword')}"
+                             th:errors="*{adminPassword}"></div>
+                        <div class="form-text"><th:block th:text="#{ui.at.least.8.characters}">At least 8 characters.</th:block></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label rf-required" for="adminPasswordConfirm"><th:block th:text="#{ui.confirm.password}">Confirm password</th:block></label>
+                        <input class="form-control" id="adminPasswordConfirm" type="password"
+                               th:field="*{adminPasswordConfirm}" autocomplete="new-password" required>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('adminPasswordConfirm')}"
+                             th:errors="*{adminPasswordConfirm}"></div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-3">
+                    <button class="btn btn-primary" type="submit"><th:block th:text="#{ui.next.2}">Next</th:block> <i class="bi bi-arrow-right"></i></button>
+                </div>
+            </form>
+
+            <form th:if="${step == 2}" th:action="@{/setup/complete}" th:object="${setupForm}" method="post">
+                <dl class="rf-kv mb-3">
+                    <dt><th:block th:text="#{ui.application}">Application</th:block></dt>
+                    <dd th:text="*{appName}"></dd>
+                    <dt><th:block th:text="#{ui.administrator}">Administrator</th:block></dt>
+                    <dd th:text="|*{adminFirstName} *{adminLastName} (*{adminUsername})|"></dd>
+                    <dt>Email</dt>
+                    <dd th:text="*{adminEmail}"></dd>
+                </dl>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" id="seedExampleCatalog" type="checkbox"
+                           th:field="*{seedExampleCatalog}">
+                    <label class="form-check-label" for="seedExampleCatalog">
+                        <th:block th:text="#{ui.create.an.example.structure}">Create an example structure</th:block>
+                        <span class="rf-muted rf-small">(Finance/Payments/SEPA, Notification, Identity)</span>
+                    </label>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-outline-secondary" type="submit" th:formaction="@{/setup/back}" name="step"
+                            value="1" formnovalidate>
+                        <i class="bi bi-arrow-left"></i> <th:block th:text="#{ui.back}">Back</th:block>
+                    </button>
+                    <button class="btn btn-success" type="submit">
+                        <i class="bi bi-check2-circle"></i> <th:block th:text="#{ui.complete.setup}">Complete setup</th:block>
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</section>
+</body>
+</html>

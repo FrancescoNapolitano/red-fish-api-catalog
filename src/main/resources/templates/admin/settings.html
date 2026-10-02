@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(#{ui.settings}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title"><th:block th:text="#{ui.settings}">Settings</th:block></h1>
+            <p class="rf-page-subtitle"><th:block th:text="#{ui.application.settings.applied.without.restarting}">Application settings, applied without restarting</th:block></p>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="rf-panel">
+                <div class="rf-panel-header"><i class="bi bi-sliders"></i> <th:block th:text="#{ui.general.settings}">General settings</th:block></div>
+                <div class="rf-panel-body">
+                    <form th:action="@{/admin/settings}" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label rf-required" for="appName"><th:block th:text="#{ui.application.name}">Application name</th:block></label>
+                                <input class="form-control" id="appName" name="appName" type="text" required
+                                       th:value="${appNameValue}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label rf-required" for="maxUploadKb"><th:block th:text="#{ui.maximum.upload.kb}">Maximum upload (KB)</th:block></label>
+                                <input class="form-control" id="maxUploadKb" name="maxUploadKb" type="number"
+                                       min="16" max="20480" required th:value="${maxUploadKb}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label rf-required" for="apiTestTimeoutSeconds">
+                                    <th:block th:text="#{ui.api.test.timeout.s}">API test timeout (s)</th:block>
+                                </label>
+                                <input class="form-control" id="apiTestTimeoutSeconds" name="apiTestTimeoutSeconds"
+                                       type="number" min="1" max="300" required th:value="${apiTestTimeoutSeconds}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label rf-required" for="healthCheckIntervalMinutes">
+                                    Health check (min)
+                                </label>
+                                <input class="form-control" id="healthCheckIntervalMinutes"
+                                       name="healthCheckIntervalMinutes" type="number" min="1" max="1440" required
+                                       th:value="${healthCheckIntervalMinutes}">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary mt-3" type="submit">
+                            <i class="bi bi-check2"></i> <th:block th:text="#{ui.save.settings}">Save settings</th:block>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="rf-panel mb-3">
+                <div class="rf-panel-header"><i class="bi bi-image"></i> Logo</div>
+                <div class="rf-panel-body">
+                    <div class="mb-3" th:if="${appLogoPath != null and !appLogoPath.isEmpty()}">
+                        <img th:src="@{/branding/logo}" th:alt="#{ui.current.logo}" style="max-height: 48px; max-width: 100%">
+                        <form class="mt-2" th:action="@{/admin/settings/logo/delete}" method="post">
+                            <button class="btn btn-sm btn-outline-danger" type="submit"
+                                    th:data-confirm="#{ui.remove.the.logo}">
+                                <i class="bi bi-trash"></i> <th:block th:text="#{ui.remove.logo}">Remove logo</th:block>
+                            </button>
+                        </form>
+                    </div>
+                    <form th:action="@{/admin/settings/logo}" method="post" enctype="multipart/form-data">
+                        <label class="form-label" for="logo"><th:block th:text="#{ui.upload.a.new.logo}">Upload a new logo</th:block></label>
+                        <input class="form-control form-control-sm mb-2" id="logo" name="logo" type="file"
+                               accept="image/png,image/jpeg,image/svg+xml,image/gif,image/webp" required>
+                        <div class="form-text mb-2"><th:block th:text="#{ui.png.jpg.svg.gif.or.webp.up.to.1.mb}">PNG, JPG, SVG, GIF or WebP, up to 1 MB.</th:block></div>
+                        <button class="btn btn-sm btn-outline-primary" type="submit">
+                            <i class="bi bi-upload"></i> <th:block th:text="#{ui.upload}">Upload</th:block>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="rf-panel">
+                <div class="rf-panel-header"><i class="bi bi-list-columns"></i> <th:block th:text="#{ui.stored.values}">Stored values</th:block></div>
+                <div class="table-responsive">
+                    <table class="table rf-table table-sm mb-0">
+                        <tbody>
+                        <tr th:each="entry : ${settings}">
+                            <td class="rf-mono rf-small" th:text="${entry.key}"></td>
+                            <td class="rf-small" style="word-break: break-all" th:text="${entry.value}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

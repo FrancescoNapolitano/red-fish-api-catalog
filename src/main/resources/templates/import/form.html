@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(#{ui.import.specification}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title"><th:block th:text="#{ui.import.specification}">Import specification</th:block></h1>
+            <p class="rf-page-subtitle">
+                <th:block th:text="#{ui.openapi.2.0.3.x.json.or.yaml.and}">OpenAPI 2.0 / 3.x (JSON or YAML) and</th:block> <code>.proto</code><th:block th:text="#{ui.files.uploaded.or.fetched.from.a.url.maximum.size}">files, uploaded or fetched from a URL. Maximum size:</th:block> <span th:text="${maxUploadKb}">10240</span> KB.
+            </p>
+        </div>
+    </div>
+
+    <div class="rf-panel" style="max-width: 52rem">
+        <div class="rf-panel-body">
+            <form th:action="@{/import}" th:object="${importForm}" method="post" enctype="multipart/form-data">
+
+                <h2 class="h6"><th:block th:text="#{ui.1.destination}">1. Destination</th:block></h2>
+                <p class="rf-muted rf-small">
+                    <th:block th:text="#{ui.choose.an.existing.service.to.add.a.revision.previous.revisions.are.re}">Choose an existing service to add a revision (previous revisions are retained), or a group to create a new service.</th:block>
+                </p>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label" for="serviceId"><th:block th:text="#{ui.existing.service}">Existing service</th:block></label>
+                        <select class="form-select" id="serviceId" th:field="*{serviceId}">
+                            <option value=""><th:block th:text="#{ui.new.service}">— new service —</th:block></option>
+                            <option th:each="s : ${services}" th:value="${s.id}"
+                                    th:text="${s.group.path} + ' / ' + ${s.name} + ' (' + ${s.serviceType.label} + ')'"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="groupId"><th:block th:text="#{ui.destination.group}">Destination group</th:block></label>
+                        <select class="form-select" id="groupId" th:field="*{groupId}">
+                            <option value=""><th:block th:text="#{ui.select}">— select —</th:block></option>
+                            <option th:each="g : ${groupOptions}" th:value="${g.id}" th:text="${g.label}"></option>
+                        </select>
+                        <div class="form-text"><th:block th:text="#{ui.required.only.when.creating.a.new.service}">Required only when creating a new service.</th:block></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="serviceName"><th:block th:text="#{ui.new.service.name}">New service name</th:block></label>
+                        <input class="form-control" id="serviceName" type="text" th:field="*{serviceName}"
+                               th:placeholder="#{ui.taken.from.the.specification.title}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="tags">Tag</label>
+                        <input class="form-control" id="tags" type="text" th:field="*{tags}"
+                               placeholder="Internal, PSD2">
+                        <div class="form-text"><th:block th:text="#{ui.comma.separated.leave.blank.to.keep.existing.tags}">Comma-separated. Leave blank to keep existing tags.</th:block></div>
+                    </div>
+                </div>
+
+                <h2 class="h6"><th:block th:text="#{ui.2.source}">2. Source</th:block></h2>
+                <div class="mb-3">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" id="sourceUpload" th:field="*{sourceType}"
+                               value="UPLOAD">
+                        <label class="form-check-label" for="sourceUpload">
+                            <i class="bi bi-upload"></i> <th:block th:text="#{ui.file.upload}">File upload</th:block>
+                        </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" id="sourceUrl" th:field="*{sourceType}"
+                               value="URL">
+                        <label class="form-check-label" for="sourceUrl">
+                            <i class="bi bi-globe"></i> URL HTTP/HTTPS
+                        </label>
+                    </div>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label" for="file">File</label>
+                        <input class="form-control" id="file" type="file" th:field="*{file}"
+                               accept=".json,.yaml,.yml,.proto,application/json,text/yaml,text/plain">
+                        <div class="form-text"><th:block th:text="#{ui.expected.extensions.json.yaml.yml.proto}">Expected extensions: .json, .yaml, .yml, .proto</th:block></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="url"><th:block th:text="#{ui.specification.url}">Specification URL</th:block></label>
+                        <input class="form-control" id="url" type="url" th:field="*{url}"
+                               placeholder="https://api.example.com/v3/api-docs">
+                    </div>
+                </div>
+
+                <h2 class="h6"><th:block th:text="#{ui.3.options}">3. Options</th:block></h2>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-8">
+                        <label class="form-label" for="notes"><th:block th:text="#{ui.revision.notes}">Revision notes</th:block></label>
+                        <input class="form-control" id="notes" type="text" th:field="*{notes}"
+                               th:placeholder="#{ui.e.g.aligned.with.release.2.4}">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-check">
+                            <input class="form-check-input" id="makeCurrent" type="checkbox" th:field="*{makeCurrent}">
+                            <label class="form-check-label" for="makeCurrent">
+                                <th:block th:text="#{ui.set.as.current.revision}">Set as current revision</th:block>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-cloud-arrow-up"></i> <th:block th:text="#{ui.import}">Import</th:block>
+                    </button>
+                    <a class="btn btn-outline-secondary" th:href="@{/catalog}"><th:block th:text="#{ui.cancel}">Cancel</th:block></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="rf-panel mt-3" style="max-width: 52rem">
+        <div class="rf-panel-header"><i class="bi bi-lightbulb"></i> <th:block th:text="#{ui.what.happens.during.import}">What happens during import</th:block></div>
+        <div class="rf-panel-body rf-small">
+            <ol class="mb-0">
+                <li><th:block th:text="#{ui.automatic.format.detection.openapi.2.0.openapi.3.x.proto}">Automatic format detection (OpenAPI 2.0, OpenAPI 3.x, proto).</th:block></li>
+                <li><th:block th:text="#{ui.parsing.and.validation.errors.stop.the.import.warnings.are.shown.after}">Parsing and validation: errors stop the import; warnings are shown afterwards.</th:block></li>
+                <li><th:block th:text="#{ui.the.original.file.is.preserved.and.available.for.download}">The original file is preserved and available for download.</th:block></li>
+                <li><th:block th:text="#{ui.metadata.endpoints.and.models.are.extracted}">Metadata, endpoints and models are extracted.</th:block></li>
+                <li><th:block th:text="#{ui.a.new.revision.is.created.previous.revisions.remain.available.for.brow}">A new revision is created; previous revisions remain available for browsing and comparison.</th:block></li>
+            </ol>
+        </div>
+    </div>
+</section>
+</body>
+</html>

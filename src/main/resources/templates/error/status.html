@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/plain :: page(${statusCode} + ' — ' + ${statusText}, ~{::section})}">
+<body>
+<section class="rf-card-narrow">
+    <div class="rf-panel">
+        <div class="rf-panel-body text-center">
+            <div class="display-5 fw-semibold" th:text="${statusCode}">500</div>
+            <p class="h6 mt-2" th:text="${statusText}">Errore</p>
+            <p class="rf-muted rf-small" th:text="${statusDetail}"></p>
+            <a class="btn btn-sm btn-primary" th:href="@{/}">
+                <i class="bi bi-house-door"></i> <th:block th:text="#{ui.back.to.dashboard}">Back to dashboard</th:block>
+            </a>
+        </div>
+    </div>
+</section>
+</body>
+</html>

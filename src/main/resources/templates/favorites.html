@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(#{ui.favorites}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title"><th:block th:text="#{ui.favorites}">Favorites</th:block></h1>
+            <p class="rf-page-subtitle"><th:block th:text="#{ui.the.services.you.use.most.often}">The services you use most often</th:block></p>
+        </div>
+    </div>
+
+    <div class="rf-panel">
+        <div class="table-responsive" th:if="${!services.isEmpty()}">
+            <table class="table rf-table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th><th:block th:text="#{ui.service}">Service</th:block></th>
+                    <th><th:block th:text="#{ui.group}">Group</th:block></th>
+                    <th><th:block th:text="#{ui.type}">Type</th:block></th>
+                    <th><th:block th:text="#{ui.version}">Version</th:block></th>
+                    <th><th:block th:text="#{ui.status}">Status</th:block></th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${services}">
+                    <td><a th:href="@{/services/{id}(id=${s.id})}" th:text="${s.name}"></a></td>
+                    <td class="rf-small rf-muted" th:text="${s.group.path}"></td>
+                    <td><span class="rf-chip" th:text="${s.serviceType.label}"></span></td>
+                    <td class="rf-small" th:text="${s.version != null} ? ${s.version} : '—'"></td>
+                    <td>
+                        <span class="badge" th:classappend="${s.deprecated} ? 'text-bg-danger' : 'text-bg-success'"
+                              th:text="${s.status.label}"></span>
+                    </td>
+                    <td class="text-end">
+                        <form th:action="@{/services/{id}/favorite(id=${s.id})}" method="post">
+                            <button class="btn btn-sm btn-outline-secondary" type="submit"
+                                    th:title="#{ui.remove.from.favorites}">
+                                <i class="bi bi-star-fill text-warning"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="rf-empty" th:if="${services.isEmpty()}">
+            <i class="bi bi-star"></i>
+            <th:block th:text="#{ui.no.favorites.yet}">No favorites yet.</th:block>
+            <div class="rf-small mt-1"><th:block th:text="#{ui.use.the.star.icon.on.a.service.page.to.add.it}">Use the star icon on a service page to add it.</th:block></div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

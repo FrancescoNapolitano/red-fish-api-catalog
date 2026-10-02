@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page('Dashboard', ~{::section})}">
+<body>
+<section>
+
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title">Dashboard</h1>
+            <p class="rf-page-subtitle"><th:block th:text="#{ui.api.catalog.overview}">API catalog overview</th:block></p>
+        </div>
+        <div class="rf-page-actions">
+            <a class="btn btn-sm btn-outline-secondary" th:href="@{/catalog}">
+                <i class="bi bi-diagram-3"></i> <th:block th:text="#{ui.catalog}">Catalog</th:block>
+            </a>
+            <a class="btn btn-sm btn-primary" th:href="@{/import}"
+               th:if="${@perm.hasAnywhere('IMPORT_SWAGGER') or @perm.hasAnywhere('IMPORT_GRPC')}">
+                <i class="bi bi-cloud-arrow-up"></i> <th:block th:text="#{ui.import.specification}">Import specification</th:block>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-2">
+            <div class="rf-stat">
+                <div class="rf-stat-icon"><i class="bi bi-hdd-stack"></i></div>
+                <div>
+                    <div class="rf-stat-value" th:text="${counters.services}">0</div>
+                    <div class="rf-stat-label"><th:block th:text="#{ui.services}">Services</th:block></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="rf-stat">
+                <div class="rf-stat-icon"><i class="bi bi-signpost-split"></i></div>
+                <div>
+                    <div class="rf-stat-value" th:text="${counters.endpoints}">0</div>
+                    <div class="rf-stat-label">Endpoint</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="rf-stat">
+                <div class="rf-stat-icon"><i class="bi bi-diagram-3"></i></div>
+                <div>
+                    <div class="rf-stat-value" th:text="${counters.groups}">0</div>
+                    <div class="rf-stat-label"><th:block th:text="#{ui.groups}">Groups</th:block></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="rf-stat">
+                <div class="rf-stat-icon"><i class="bi bi-people"></i></div>
+                <div>
+                    <div class="rf-stat-value" th:text="${counters.users}">0</div>
+                    <div class="rf-stat-label"><th:block th:text="#{ui.active.users}">Active users</th:block></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="rf-stat">
+                <div class="rf-stat-icon"><i class="bi bi-exclamation-octagon"></i></div>
+                <div>
+                    <div class="rf-stat-value" th:text="${counters.deprecated}">0</div>
+                    <div class="rf-stat-label"><th:block th:text="#{ui.deprecated}">Deprecated</th:block></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="rf-stat">
+                <div class="rf-stat-icon"><i class="bi bi-hdd-network"></i></div>
+                <div>
+                    <div class="rf-stat-value" th:text="${counters.environments}">0</div>
+                    <div class="rf-stat-label"><th:block th:text="#{ui.environments}">Environments</th:block></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-warning py-2 rf-small" th:if="${!unhealthy.isEmpty()}">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong th:text="${unhealthy.size()}">0</strong> <th:block th:text="#{ui.environments.unreachable.at.the.last.check}">environments unreachable at the last check:</th:block>
+        <span th:each="env, it : ${unhealthy}">
+            <a th:href="@{/services/{id}(id=${env.service.id})} + '#environments'"
+               th:text="|${env.service.name} (${env.name})|"></a><span th:if="${!it.last}">, </span>
+        </span>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <div class="rf-panel h-100">
+                <div class="rf-panel-header"><i class="bi bi-person-exclamation"></i> <th:block th:text="#{ui.services.without.a.contact}">Services without a contact</th:block></div>
+                <div class="rf-panel-body">
+                    <p class="rf-small rf-muted"><th:block th:text="#{ui.assign.a.contact.so.everyone.knows.who.to.ask.first.8.services}">Assign a contact so everyone knows who to ask. First 8 services.</th:block></p>
+                    <p th:if="${withoutContacts.isEmpty()}"><th:block th:text="#{ui.all.services.have.a.contact}">All services have a contact.</th:block></p>
+                    <a class="d-block py-1" th:each="s : ${withoutContacts}"
+                       th:href="@{/services/{id}(id=${s.id})} + '#contacts'" th:text="${s.name}"></a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="rf-panel h-100">
+                <div class="rf-panel-header"><i class="bi bi-hdd-network"></i> <th:block th:text="#{ui.environments.to.configure}">Environments to configure</th:block></div>
+                <div class="rf-panel-body">
+                    <p class="rf-small rf-muted"><th:block th:text="#{ui.add.an.environment.url.to.try.api.calls.first.8.services}">Add an environment URL to try API calls. First 8 services.</th:block></p>
+                    <p th:if="${withoutEnvironmentUrl.isEmpty()}"><th:block th:text="#{ui.all.services.have.an.environment.url}">All services have an environment URL.</th:block></p>
+                    <a class="d-block py-1" th:each="s : ${withoutEnvironmentUrl}"
+                       th:href="@{/services/{id}(id=${s.id})} + '#environments'" th:text="${s.name}"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+
+        <div class="col-lg-6">
+            <div class="rf-panel h-100">
+                <div class="rf-panel-header">
+                    <i class="bi bi-cloud-arrow-down"></i> <th:block th:text="#{ui.recent.imports}">Recent imports</th:block>
+                </div>
+                <div class="table-responsive" th:if="${!recentImports.isEmpty()}">
+                    <table class="table rf-table table-hover mb-0">
+                        <thead>
+                        <tr>
+                            <th><th:block th:text="#{ui.service}">Service</th:block></th>
+                            <th>Rev.</th>
+                            <th><th:block th:text="#{ui.format}">Format</th:block></th>
+                            <th>Endpoint</th>
+                            <th><th:block th:text="#{ui.date}">Date</th:block></th>
+                            <th><th:block th:text="#{ui.by}">By</th:block></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="v : ${recentImports}">
+                            <td>
+                                <a th:href="@{/services/{id}(id=${v.service.id})}" th:text="${v.service.name}"></a>
+                                <div class="rf-muted rf-small" th:text="${v.service.group.path}"></div>
+                            </td>
+                            <td><span class="badge text-bg-secondary" th:text="'r' + ${v.revision}"></span></td>
+                            <td class="rf-small" th:text="${v.specFormat.label}"></td>
+                            <td th:text="${v.endpointCount}"></td>
+                            <td class="rf-small rf-muted"
+                                th:text="${#temporals.format(v.importedAt.atZone(T(java.time.ZoneId).systemDefault()), #messages.msg('format.datetime.short'))}"></td>
+                            <td class="rf-small rf-muted" th:text="${v.importedByUsername}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="rf-empty" th:if="${recentImports.isEmpty()}">
+                    <i class="bi bi-inbox"></i>
+                    <th:block th:text="#{ui.no.specifications.imported.yet}">No specifications imported yet.</th:block>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="rf-panel h-100">
+                <div class="rf-panel-header">
+                    <i class="bi bi-clock-history"></i> <th:block th:text="#{ui.recently.updated}">Recently updated</th:block>
+                </div>
+                <div class="table-responsive" th:if="${!recentlyUpdated.isEmpty()}">
+                    <table class="table rf-table table-hover mb-0">
+                        <thead>
+                        <tr>
+                            <th><th:block th:text="#{ui.service}">Service</th:block></th>
+                            <th><th:block th:text="#{ui.type}">Type</th:block></th>
+                            <th><th:block th:text="#{ui.version}">Version</th:block></th>
+                            <th><th:block th:text="#{ui.status}">Status</th:block></th>
+                            <th><th:block th:text="#{ui.updated}">Updated</th:block></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="s : ${recentlyUpdated}">
+                            <td>
+                                <a th:href="@{/services/{id}(id=${s.id})}" th:text="${s.name}"></a>
+                                <div class="rf-muted rf-small" th:text="${s.group.path}"></div>
+                            </td>
+                            <td><span class="rf-chip" th:text="${s.serviceType.label}"></span></td>
+                            <td class="rf-small" th:text="${s.version != null ? s.version : '—'}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${s.deprecated} ? 'text-bg-danger' : 'text-bg-success'"
+                                      th:text="${s.status.label}"></span>
+                            </td>
+                            <td class="rf-small rf-muted"
+                                th:text="${#temporals.format(s.updatedAt.atZone(T(java.time.ZoneId).systemDefault()), #messages.msg('format.datetime.short'))}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="rf-empty" th:if="${recentlyUpdated.isEmpty()}">
+                    <i class="bi bi-inbox"></i>
+                    <th:block th:text="#{ui.no.services.yet.start.by.importing.a.specification}">No services yet. Start by importing a specification.</th:block>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12" th:if="${!myFavorites.isEmpty()}">
+            <div class="rf-panel">
+                <div class="rf-panel-header"><i class="bi bi-star-fill"></i> <th:block th:text="#{ui.your.favorites}">Your favorites</th:block></div>
+                <div class="rf-panel-body d-flex flex-wrap gap-2">
+                    <a class="rf-chip" th:each="s : ${myFavorites}" th:href="@{/services/{id}(id=${s.id})}">
+                        <i class="bi bi-hdd"></i> <span th:text="${s.name}"></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>
+</body>
+</html>

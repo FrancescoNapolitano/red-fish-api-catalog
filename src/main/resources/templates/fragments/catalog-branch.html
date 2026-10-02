@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<ul th:fragment="branch(nodes)" class="list-unstyled mb-0" th:if="${nodes != null and !nodes.isEmpty()}">
+    <li th:each="node : ${nodes}">
+        <div class="d-flex align-items-center gap-2 py-1 flex-wrap"
+             th:style="'padding-left:' + ${node.depth * 1.35} + 'rem'">
+            <i class="bi" th:classappend="${node.leaf} ? 'bi-folder' : 'bi-folder-fill'"></i>
+            <a class="fw-semibold" th:href="@{/catalog/{id}(id=${node.id})}" th:text="${node.name}">Gruppo</a>
+            <code class="rf-small rf-muted" th:text="${node.path}"></code>
+            <span class="rf-chip" th:if="${node.serviceCount &gt; 0}">
+                <i class="bi bi-hdd"></i> <span th:text="${node.serviceCount}">0</span>
+            </span>
+            <span class="rf-muted rf-small"
+                  th:if="${node.totalServiceCount &gt; node.serviceCount}"
+                  th:text="'(' + ${node.totalServiceCount} + #{ui.in.subtree.2}"></span>
+            <a class="btn btn-sm btn-link py-0" th:href="@{/catalog/new(parentId=${node.id})}"
+               th:if="${@perm.hasOnPath('GROUP_CREATE', node.path)}" th:title="#{ui.add.subgroup}">
+                <i class="bi bi-plus-lg"></i>
+            </a>
+        </div>
+        <th:block th:replace="~{fragments/catalog-branch :: branch(${node.children})}"></th:block>
+    </li>
+</ul>
+
+</body>
+</html>

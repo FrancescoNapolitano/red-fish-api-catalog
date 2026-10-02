@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="paramTable(label, params)" class="mb-3" th:if="${params != null and !params.isEmpty()}">
+    <div class="rf-muted rf-small fw-semibold mb-1" th:text="${label}">Query</div>
+    <div class="table-responsive">
+        <table class="table rf-table table-sm mb-0">
+            <thead>
+            <tr>
+                <th><th:block th:text="#{ui.name}">Name</th:block></th>
+                <th><th:block th:text="#{ui.type}">Type</th:block></th>
+                <th><th:block th:text="#{ui.req}">Req.</th:block></th>
+                <th><th:block th:text="#{ui.description}">Description</th:block></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="p : ${params}">
+                <td>
+                    <span class="rf-mono" th:text="${p.name}">nome</span>
+                    <span class="text-danger" th:if="${p.required}">*</span>
+                    <span class="badge text-bg-warning rf-small" th:if="${p.deprecated}">deprecated</span>
+                </td>
+                <td class="rf-small"><code th:text="${p.typeLabel}">string</code></td>
+                <td class="text-center">
+                    <i class="bi" th:classappend="${p.required} ? 'bi-check-lg text-success' : 'bi-dash rf-muted'"></i>
+                </td>
+                <td class="rf-small">
+                    <span th:if="${p.description != null}" th:text="${p.description}"></span>
+                    <div class="rf-muted" th:if="${p.constraints != null}" th:text="${p.constraints}"></div>
+                    <div th:if="${p.enumValues != null and !p.enumValues.isEmpty()}">
+                        <code th:each="v, it : ${p.enumValues}" th:text="${v} + (${it.last} ? '' : ' | ')"></code>
+                    </div>
+                    <div class="rf-muted" th:if="${p.example != null}" th:text="#{ui.example.3} + ${p.example}"></div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

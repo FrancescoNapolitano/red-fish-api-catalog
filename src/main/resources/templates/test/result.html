@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="result">
+
+    <div class="alert alert-danger py-2 rf-small" th:if="${response.failed}">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong><th:block th:text="#{ui.request.failed}">Request failed.</th:block></strong> <span th:text="${response.error}"></span>
+        <div class="rf-muted" th:text="#{ui.elapsed.time.2} + ${response.durationMillis} + ' ms'"></div>
+    </div>
+
+    <th:block th:if="${!response.failed}">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <span class="badge fs-6"
+                  th:classappend="${response.success} ? 'text-bg-success'
+                                  : (${response.status &gt;= 500} ? 'text-bg-danger' : 'text-bg-warning')"
+                  th:text="${response.status} + ' ' + ${response.statusText}">200 OK</span>
+            <span class="rf-chip"><i class="bi bi-stopwatch"></i>
+                <span th:text="${response.durationMillis} + ' ms'"></span></span>
+            <span class="rf-chip"><i class="bi bi-file-earmark"></i>
+                <span th:text="${response.sizeBytes} + ' byte'"></span></span>
+            <span class="rf-chip" th:if="${response.contentType != null}" th:text="${response.contentType}"></span>
+        </div>
+
+        <ul class="nav nav-tabs rf-small" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-body" type="button">
+                    Body
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-headers" type="button">
+                    Headers <span class="badge text-bg-secondary" th:text="${response.headers.size()}">0</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-curl" type="button">cURL</button>
+            </li>
+        </ul>
+        <div class="tab-content pt-2">
+            <div class="tab-pane fade show active" id="tab-body">
+                <div class="rf-muted rf-small mb-1" th:if="${response.truncated}">
+                    <th:block th:text="#{ui.response.truncated.for.display}">Response truncated for display.</th:block>
+                </div>
+                <th:block th:if="${prettyBody != null}"
+                          th:replace="~{fragments/schema :: codeblock('resp-body', ${prettyBody})}"></th:block>
+                <th:block th:if="${prettyBody == null}"
+                          th:replace="~{fragments/schema :: codeblock('resp-body', ${response.body})}"></th:block>
+                <p class="rf-muted rf-small mb-0"
+                   th:if="${response.body == null or response.body.isEmpty()}"><th:block th:text="#{ui.empty.body}">Empty body.</th:block></p>
+            </div>
+            <div class="tab-pane fade" id="tab-headers">
+                <table class="table rf-table table-sm mb-0">
+                    <tbody>
+                    <tr th:each="h : ${response.headers}">
+                        <td class="rf-mono rf-small" style="width: 40%" th:text="${h.key}"></td>
+                        <td class="rf-small" style="word-break: break-all" th:text="${h.value}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="tab-pane fade" id="tab-curl">
+                <th:block th:replace="~{fragments/schema :: codeblock('resp-curl', ${curl})}"></th:block>
+            </div>
+        </div>
+    </th:block>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<ul th:fragment="nodes(nodes, activePath)" class="rf-tree" th:if="${nodes != null and !nodes.isEmpty()}">
+    <li th:each="node : ${nodes}"
+        th:data-node-path="${node.path}"
+        th:classappend="${!node.leaf and !(activePath != null and #strings.startsWith(activePath, node.path)) ? 'rf-tree-collapsed' : ''}">
+        <div class="rf-tree-item">
+            <button type="button" class="rf-tree-toggle" th:if="${!node.leaf}"
+                    th:attr="aria-label=#{ui.expand.2} + ${node.name}">
+                <i class="bi bi-caret-down-fill"></i>
+            </button>
+            <span class="rf-tree-toggle" th:if="${node.leaf}" aria-hidden="true"></span>
+            <a class="rf-tree-link"
+               th:classappend="${activePath == node.path ? 'active' : ''}"
+               th:href="@{/catalog/{id}(id=${node.id})}"
+               th:title="${node.path}">
+                <i class="bi" th:classappend="${node.leaf} ? 'bi-folder' : 'bi-folder-fill'"></i>
+                <span th:text="${node.name}">Gruppo</span>
+                <span class="rf-tree-count" th:if="${node.totalServiceCount &gt; 0}"
+                      th:text="${node.totalServiceCount}">0</span>
+            </a>
+        </div>
+        <th:block th:replace="~{fragments/tree :: nodes(${node.children}, ${activePath})}"></th:block>
+    </li>
+</ul>
+
+</body>
+</html>

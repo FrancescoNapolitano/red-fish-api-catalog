@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page('Audit log', ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title">Audit log</h1>
+            <p class="rf-page-subtitle">
+                <span th:text="${totalElements}">0</span> <th:block th:text="#{ui.recorded.operations}">recorded operations</th:block>
+            </p>
+        </div>
+    </div>
+
+    <div class="rf-panel">
+        <div class="table-responsive">
+            <table class="table rf-table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th><th:block th:text="#{ui.date.and.time}">Date and time</th:block></th>
+                    <th><th:block th:text="#{ui.user}">User</th:block></th>
+                    <th><th:block th:text="#{ui.action}">Action</th:block></th>
+                    <th><th:block th:text="#{ui.object}">Object</th:block></th>
+                    <th><th:block th:text="#{ui.details}">Details</th:block></th>
+                    <th>IP</th>
+                    <th><th:block th:text="#{ui.outcome}">Outcome</th:block></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="e : ${entries}">
+                    <td class="rf-small text-nowrap"
+                        th:text="${#temporals.format(e.createdAt.atZone(T(java.time.ZoneId).systemDefault()), #messages.msg('format.datetime.long'))}"></td>
+                    <td class="rf-small rf-mono" th:text="${e.username}"></td>
+                    <td><span class="rf-chip" th:text="${e.action}"></span></td>
+                    <td class="rf-small rf-muted"
+                        th:text="${e.entityType != null} ? |${e.entityType}#${e.entityId}| : '—'"></td>
+                    <td class="rf-small" th:text="${e.detail}"></td>
+                    <td class="rf-small rf-muted" th:text="${e.ipAddress}"></td>
+                    <td>
+                        <span class="badge" th:classappend="${e.outcome == 'OK'} ? 'text-bg-success' : 'text-bg-danger'"
+                              th:text="${e.outcome}"></span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="rf-empty" th:if="${entries.isEmpty()}">
+            <i class="bi bi-journal"></i> <th:block th:text="#{ui.no.operations.recorded}">No operations recorded.</th:block>
+        </div>
+    </div>
+
+    <nav class="mt-3" th:if="${totalPages &gt; 1}">
+        <ul class="pagination pagination-sm">
+            <li class="page-item" th:classappend="${page == 0} ? 'disabled' : ''">
+                <a class="page-link" th:href="@{/admin/audit(page=${page - 1})}"><th:block th:text="#{ui.previous}">Previous</th:block></a>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link" th:text="|${page + 1} / ${totalPages}|"></span>
+            </li>
+            <li class="page-item" th:classappend="${page + 1 &gt;= totalPages} ? 'disabled' : ''">
+                <a class="page-link" th:href="@{/admin/audit(page=${page + 1})}"><th:block th:text="#{ui.next}">Next</th:block></a>
+            </li>
+        </ul>
+    </nav>
+</section>
+</body>
+</html>

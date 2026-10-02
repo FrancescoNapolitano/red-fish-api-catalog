@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="selector" class="btn-group btn-group-sm" role="group" th:aria-label="#{language.label}">
+    <a class="btn btn-outline-secondary" lang="en" hreflang="en"
+       th:classappend="${#locale.language != 'it'} ? 'active' : ''"
+       th:attr="aria-current=${#locale.language != 'it' ? 'true' : null}"
+       th:href="${#strings.contains(requestUri, '/setup')} ? @{/setup(lang='en',step=${step})} : ${languageEnUrl}">English</a>
+    <a class="btn btn-outline-secondary" lang="it" hreflang="it"
+       th:classappend="${#locale.language == 'it'} ? 'active' : ''"
+       th:attr="aria-current=${#locale.language == 'it' ? 'true' : null}"
+       th:href="${#strings.contains(requestUri, '/setup')} ? @{/setup(lang='it',step=${step})} : ${languageItUrl}">Italiano</a>
+</div>
+</body>
+</html>

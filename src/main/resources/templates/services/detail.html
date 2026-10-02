@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(${service.name}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title">
+                <span th:text="${service.name}">Servizio</span>
+                <span class="badge align-middle"
+                      th:classappend="${service.deprecated} ? 'text-bg-danger' : 'text-bg-success'"
+                      th:text="${service.status.label}"></span>
+            </h1>
+            <p class="rf-page-subtitle">
+                <span class="rf-chip" th:text="${service.serviceType.label}"></span>
+                <span th:if="${service.version != null}" th:text="' v' + ${service.version}"></span>
+                · <a th:href="@{/catalog/{id}(id=${service.group.id})}" th:text="${service.group.path}"></a>
+                <span th:if="${selectedVersion != null}"
+                      th:text="#{ui.revision.2} + ${selectedVersion.displayLabel}"></span>
+            </p>
+            <div class="d-flex flex-wrap gap-1 mt-1">
+                <span class="rf-tag" th:each="t : ${service.tags}"
+                      th:style="'background-color:' + ${t.color}" th:text="${t.name}"></span>
+            </div>
+        </div>
+        <div class="rf-page-actions">
+            <form th:action="@{/services/{id}/favorite(id=${service.id})}" method="post" class="d-inline">
+                <button class="btn btn-sm btn-outline-secondary" type="submit"
+                        th:title="${isFavorite} ? #{ui.remove.from.favorites} : #{ui.add.to.favorites}">
+                    <i class="bi" th:classappend="${isFavorite} ? 'bi-star-fill text-warning' : 'bi-star'"></i>
+                </button>
+            </form>
+            <a class="btn btn-sm btn-outline-secondary" th:href="@{/services/{id}/versions(id=${service.id})}">
+                <i class="bi bi-clock-history"></i> <th:block th:text="#{ui.revisions}">Revisions</th:block>
+                <span class="badge text-bg-secondary" th:text="${versions.size()}">0</span>
+            </a>
+            <a class="btn btn-sm btn-outline-secondary" th:href="@{/services/{id}/diff(id=${service.id})}"
+               th:if="${versions.size() &gt; 1}">
+                <i class="bi bi-file-diff"></i> <th:block th:text="#{ui.compare}">Compare</th:block>
+            </a>
+            <a class="btn btn-sm btn-outline-secondary" th:href="@{/test(serviceId=${service.id})}"
+               th:if="${@perm.has('API_TEST')}">
+                <i class="bi bi-play-circle"></i> <th:block th:text="#{ui.api.test}">API test</th:block>
+            </a>
+            <a class="btn btn-sm btn-primary" th:href="@{/import(serviceId=${service.id})}"
+               th:if="${@perm.hasOnService('IMPORT_SWAGGER', service) or @perm.hasOnService('IMPORT_GRPC', service)}">
+                <i class="bi bi-cloud-arrow-up"></i> <th:block th:text="#{ui.new.revision}">New revision</th:block>
+            </a>
+            <a class="btn btn-sm btn-outline-secondary" th:href="@{/services/{id}/edit(id=${service.id})}"
+               th:if="${@perm.hasOnService('SERVICE_EDIT', service)}">
+                <i class="bi bi-pencil"></i>
+            </a>
+            <form th:action="@{/services/{id}/delete(id=${service.id})}" method="post" class="d-inline"
+                  th:if="${@perm.hasOnService('SERVICE_DELETE', service)}">
+                <button class="btn btn-sm btn-outline-danger" type="submit"
+                        th:attr="data-confirm=#{ui.delete.service.2} + ${service.name} + #{ui.and.all.its.revisions.2}">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <p th:if="${service.description != null}" class="rf-small" th:text="${service.description}"></p>
+
+    <form class="d-flex align-items-center gap-2 mb-3" th:if="${versions.size() &gt; 1}"
+          th:action="@{/services/{id}(id=${service.id})}" method="get">
+        <label class="form-label mb-0" for="version"><th:block th:text="#{ui.displayed.revision}">Displayed revision</th:block></label>
+        <select class="form-select form-select-sm" id="version" name="version" style="max-width: 22rem"
+                onchange="this.form.submit()">
+            <option th:each="v : ${versions}" th:value="${v.id}"
+                    th:selected="${selectedVersion != null and selectedVersion.id == v.id}"
+                    th:text="${v.displayLabel} + (${v.current} ? #{ui.current.3} : '')"></option>
+        </select>
+        <noscript>
+            <button class="btn btn-sm btn-outline-primary" type="submit"><th:block th:text="#{ui.show}">Show</th:block></button>
+        </noscript>
+    </form>
+
+    <div class="alert alert-info py-2 rf-small" th:if="${selectedVersion == null}">
+        <i class="bi bi-info-circle"></i>
+        <th:block th:text="#{ui.no.specification.imported.for.this.service}">No specification imported for this service.</th:block>
+        <a th:href="@{/import(serviceId=${service.id})}"
+           th:if="${@perm.hasOnService('IMPORT_SWAGGER', service) or @perm.hasOnService('IMPORT_GRPC', service)}">
+            <th:block th:text="#{ui.import.the.first.specification}">Import the first specification</th:block>
+        </a>
+    </div>
+
+    <div class="row g-3">
+
+        <div class="col-12" th:if="${selectedVersion != null}">
+            <div class="rf-panel">
+                <div class="rf-panel-header">
+                    <i class="bi bi-signpost-split"></i> Endpoint
+                    <span class="badge text-bg-secondary" th:text="${endpoints.size()}">0</span>
+                    <div class="ms-auto d-flex align-items-center gap-2">
+                        <a class="btn btn-sm btn-outline-secondary" th:if="${@perm.hasOnService('SPEC_DOWNLOAD', service)}"
+                           th:href="@{/services/{id}/versions/{vid}/download(id=${service.id},vid=${selectedVersion.id})}">
+                            <i class="bi bi-download"></i> <th:block th:text="#{ui.download.specification}">Download specification</th:block>
+                        </a>
+                    </div>
+                </div>
+                <div class="rf-panel-body" th:if="${!endpoints.isEmpty()}">
+                    <div class="rf-endpoint" th:each="e : ${endpoints}"
+                         th:classappend="${e.deprecated} ? 'rf-deprecated' : ''">
+                        <div class="rf-endpoint-head" role="button" tabindex="0" aria-expanded="false">
+                            <th:block th:replace="~{fragments/schema :: method(${e.httpMethod})}"></th:block>
+                            <span class="rf-endpoint-path" th:text="${e.path}">/path</span>
+                            <span class="badge text-bg-warning" th:if="${e.deprecated}">deprecated</span>
+                            <span class="rf-endpoint-summary"
+                                  th:text="${e.summary != null} ? ${e.summary} : ${e.operationId}"></span>
+                            <i class="bi bi-chevron-down rf-muted" data-endpoint-caret></i>
+                        </div>
+                        <div class="rf-endpoint-body" hidden>
+                            <p class="rf-small mb-2" th:if="${e.description != null}" th:text="${e.description}"></p>
+                            <dl class="rf-kv mb-2">
+                                <dt th:if="${e.operationId != null}">operationId</dt>
+                                <dd th:if="${e.operationId != null}"><code th:text="${e.operationId}"></code></dd>
+                                <dt th:if="${e.tags != null}">Tag</dt>
+                                <dd th:if="${e.tags != null}" th:text="${e.tags}"></dd>
+                                <dt th:if="${e.grpcStreaming != null}">Streaming</dt>
+                                <dd th:if="${e.grpcStreaming != null}" th:text="${e.grpcStreaming}"></dd>
+                                <dt th:if="${e.consumes != null}"><th:block th:text="#{ui.consumes}">Consumes</th:block></dt>
+                                <dd th:if="${e.consumes != null}" th:text="${e.consumes}"></dd>
+                                <dt th:if="${e.produces != null}"><th:block th:text="#{ui.produces}">Produces</th:block></dt>
+                                <dd th:if="${e.produces != null}" th:text="${e.produces}"></dd>
+                            </dl>
+                            <a class="btn btn-sm btn-primary"
+                               th:href="@{/services/{sid}/endpoints/{eid}(sid=${service.id},eid=${e.id})}">
+                                <i class="bi bi-box-arrow-up-right"></i> <th:block th:text="#{ui.details.curl.and.test}">Details, cURL and test</th:block>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="rf-empty" th:if="${endpoints.isEmpty()}">
+                    <i class="bi bi-signpost"></i> <th:block th:text="#{ui.the.selected.revision.has.no.endpoints}">The selected revision has no endpoints.</th:block>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12" th:if="${selectedVersion != null and !models.isEmpty()}">
+            <div class="rf-panel">
+                <div class="rf-panel-header">
+                    <i class="bi bi-braces"></i> <th:block th:text="#{ui.models.and.schemas}">Models and schemas</th:block>
+                    <span class="badge text-bg-secondary" th:text="${models.size()}">0</span>
+                    <a class="btn btn-sm btn-link ms-auto py-0"
+                       th:href="@{/services/{id}/models(id=${service.id})}">
+                        <th:block th:text="#{ui.view.all}">View all</th:block>
+                    </a>
+                </div>
+                <div class="rf-panel-body d-flex flex-wrap gap-2">
+
+                    <a class="rf-chip" th:each="m : ${models}" th:title="${m.description}"
+                       th:href="@{/services/{sid}/models/{mid}(sid=${service.id},mid=${m.id})}">
+                        <i class="bi" th:classappend="${m.kind.name() == 'ENUM'} ? 'bi-list-ol' : 'bi-box'"></i>
+                        <span th:text="${m.name}"></span>
+                        <span class="rf-muted" th:text="${m.kind.label}"></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="rf-panel h-100">
+                <div id="environments" class="rf-panel-header"><i class="bi bi-hdd-network"></i> <th:block th:text="#{ui.environments}">Environments</th:block></div>
+                <div class="table-responsive" th:if="${!environments.isEmpty()}">
+                    <table class="table rf-table table-sm mb-0">
+                        <thead>
+                        <tr>
+                            <th><th:block th:text="#{ui.environment}">Environment</th:block></th>
+                            <th>Base URL</th>
+                            <th><th:block th:text="#{ui.status}">Status</th:block></th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="env : ${environments}">
+                            <td><span class="rf-chip" th:text="${env.name}"></span></td>
+                            <td class="rf-small rf-mono" style="word-break: break-all" th:text="${env.baseUrl}"></td>
+                            <td class="rf-small">
+                                <span class="rf-dot"
+                                      th:style="'background-color:' + (${env.healthStatus.name() == 'UP'} ? '#2e7d32'
+                                                : (${env.healthStatus.name() == 'DOWN'} ? '#c1272d' : '#8b949e'))"></span>
+                                <span th:text="${env.healthStatus.label}"></span>
+                                <div class="rf-muted" th:if="${env.healthDetail != null}"
+                                     th:text="${env.healthDetail}"></div>
+                            </td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-link py-0" th:if="${@perm.has('API_TEST')}"
+                                   th:href="@{/test(serviceId=${service.id})}" th:title="#{ui.try}">
+                                    <i class="bi bi-play"></i>
+                                </a>
+                                <form class="d-inline" method="post"
+                                      th:if="${@perm.hasOnService('SERVICE_EDIT', service)}"
+                                      th:action="@{/services/{sid}/environments/{eid}/delete(sid=${service.id},eid=${env.id})}">
+                                    <button class="btn btn-sm btn-link text-danger py-0" type="submit"
+                                            th:data-confirm="#{ui.remove.this.environment}">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="rf-muted rf-small px-3 pt-3 mb-0" th:if="${environments.isEmpty()}">
+                    <th:block th:text="#{ui.no.environments.configured}">No environments configured.</th:block>
+                </p>
+
+                <div class="rf-panel-body border-top" th:if="${@perm.hasOnService('SERVICE_EDIT', service)}">
+                    <form class="row g-2" th:action="@{/services/{id}/environments(id=${service.id})}" method="post">
+                        <div class="col-md-4">
+                            <label class="form-label" for="envName"><th:block th:text="#{ui.environment}">Environment</th:block></label>
+                            <input class="form-control form-control-sm" id="envName" name="name" list="envNames"
+                                   required placeholder="DEV">
+                            <datalist id="envNames">
+                                <option th:each="n : ${standardEnvironments}" th:value="${n}"></option>
+                            </datalist>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="envBaseUrl">Base URL</label>
+                            <input class="form-control form-control-sm" id="envBaseUrl" name="baseUrl" type="url"
+                                   placeholder="https://api-dev.example.com">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="envHealth">Health check URL</label>
+                            <input class="form-control form-control-sm" id="envHealth" name="healthCheckUrl" type="url"
+                                   placeholder="https://api-dev.example.com/actuator/health">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="envSpec"><th:block th:text="#{ui.specification.url.2}">Specification URL</th:block></label>
+                            <input class="form-control form-control-sm" id="envSpec" name="specUrl" type="url"
+                                   placeholder="https://api-dev.example.com/v3/api-docs">
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-sm btn-outline-primary" type="submit">
+                                <i class="bi bi-plus-lg"></i> <th:block th:text="#{ui.save.environment}">Save environment</th:block>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="rf-panel mb-3">
+                <div class="rf-panel-header"><i class="bi bi-link-45deg"></i> <th:block th:text="#{ui.links}">Links</th:block></div>
+                <div class="list-group list-group-flush" th:if="${!links.isEmpty()}">
+                    <div class="list-group-item d-flex align-items-center gap-2" th:each="l : ${links}">
+                        <i class="bi" th:classappend="${l.icon}"></i>
+                        <a th:href="${l.url}" th:text="${l.label}" target="_blank" rel="noopener noreferrer"></a>
+                        <span class="rf-muted rf-small" th:if="${l.kind != null}" th:text="${l.kind}"></span>
+                        <form class="ms-auto" method="post" th:if="${@perm.hasOnService('SERVICE_EDIT', service)}"
+                              th:action="@{/services/{sid}/links/{lid}/delete(sid=${service.id},lid=${l.id})}">
+                            <button class="btn btn-sm btn-link text-danger py-0" type="submit">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <p class="rf-muted rf-small px-3 pt-3 mb-0" th:if="${links.isEmpty()}">
+                    <th:block th:text="#{ui.no.links.configured.repository.wiki.jira.environments}">No links configured (repository, wiki, Jira, environments…).</th:block>
+                </p>
+                <div class="rf-panel-body border-top" th:if="${@perm.hasOnService('SERVICE_EDIT', service)}">
+                    <form class="row g-2" th:action="@{/services/{id}/links(id=${service.id})}" method="post">
+                        <div class="col-md-4">
+                            <input class="form-control form-control-sm" name="label" th:placeholder="#{ui.label}" required>
+                        </div>
+                        <div class="col-md-5">
+                            <input class="form-control form-control-sm" name="url" type="url" placeholder="https://…"
+                                   required>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select form-select-sm" name="kind">
+                                <option value=""><th:block th:text="#{ui.type.2}">type…</th:block></option>
+                                <option value="GIT">Repository</option>
+                                <option value="WIKI">Wiki</option>
+                                <option value="JIRA">Jira</option>
+                                <option value="ENV"><th:block th:text="#{ui.environment}">Environment</th:block></option>
+                                <option value="MONITORING">Monitoring</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-sm btn-outline-primary" type="submit">
+                                <i class="bi bi-plus-lg"></i> <th:block th:text="#{ui.add.link}">Add link</th:block>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="rf-panel">
+                <div id="contacts" class="rf-panel-header"><i class="bi bi-person-lines-fill"></i> <th:block th:text="#{ui.contacts}">Contacts</th:block></div>
+                <div class="list-group list-group-flush" th:if="${!contacts.isEmpty()}">
+                    <div class="list-group-item d-flex align-items-start gap-2" th:each="c : ${contacts}">
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold" th:text="${c.name}"></div>
+                            <div class="rf-small">
+                                <a th:if="${c.email != null}" th:href="'mailto:' + ${c.email}"
+                                   th:text="${c.email}"></a>
+                                <span class="rf-muted" th:if="${c.team != null}" th:text="' · ' + ${c.team}"></span>
+                            </div>
+                            <div class="rf-muted rf-small" th:if="${c.notes != null}" th:text="${c.notes}"></div>
+                        </div>
+                        <form method="post" th:if="${@perm.hasOnService('SERVICE_EDIT', service)}"
+                              th:action="@{/services/{sid}/contacts/{cid}/delete(sid=${service.id},cid=${c.id})}">
+                            <button class="btn btn-sm btn-link text-danger py-0" type="submit">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <p class="rf-muted rf-small px-3 pt-3 mb-0" th:if="${contacts.isEmpty()}">
+                    <th:block th:text="#{ui.no.contacts.specified.for.this.service}">No contacts specified for this service.</th:block>
+                </p>
+                <div class="rf-panel-body border-top" th:if="${@perm.hasOnService('SERVICE_EDIT', service)}">
+                    <form class="row g-2" th:action="@{/services/{id}/contacts(id=${service.id})}"
+                          th:object="${contactForm}" method="post">
+                        <div class="col-md-6">
+                            <input class="form-control form-control-sm" type="text" th:field="*{name}"
+                                   th:placeholder="#{ui.contact.name}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <input class="form-control form-control-sm" type="email" th:field="*{email}"
+                                   placeholder="Email">
+                        </div>
+                        <div class="col-md-6">
+                            <input class="form-control form-control-sm" type="text" th:field="*{team}"
+                                   placeholder="Team">
+                        </div>
+                        <div class="col-md-6">
+                            <input class="form-control form-control-sm" type="text" th:field="*{notes}"
+                                   th:placeholder="#{ui.notes}">
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-sm btn-outline-primary" type="submit">
+                                <i class="bi bi-person-plus"></i> <th:block th:text="#{ui.add.contact}">Add contact</th:block>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="rf-panel">
+                <div class="rf-panel-header">
+                    <i class="bi bi-chat-left-text"></i> <th:block th:text="#{ui.notes.and.comments}">Notes and comments</th:block>
+                    <span class="badge text-bg-secondary" th:text="${comments.size()}">0</span>
+                </div>
+                <div class="list-group list-group-flush" th:if="${!comments.isEmpty()}">
+                    <div class="list-group-item" th:each="c : ${comments}">
+                        <div class="d-flex align-items-start gap-2">
+                            <div class="flex-grow-1">
+                                <div class="rf-small rf-muted">
+                                    <strong th:text="${c.authorLabel != null} ? ${c.authorLabel} : #{ui.anonymous}"></strong>
+                                    ·
+                                    <span th:text="${#temporals.format(c.createdAt.atZone(T(java.time.ZoneId).systemDefault()), #messages.msg('format.datetime.short'))}"></span>
+                                </div>
+                                <div th:text="${c.body}"></div>
+                            </div>
+                            <form method="post" th:if="${@perm.hasOnService('SERVICE_EDIT', service)}"
+                                  th:action="@{/services/{sid}/comments/{cid}/delete(sid=${service.id},cid=${c.id})}">
+                                <button class="btn btn-sm btn-link text-danger py-0" type="submit"
+                                        th:data-confirm="#{ui.remove.this.comment}">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <p class="rf-muted rf-small px-3 pt-3 mb-0" th:if="${comments.isEmpty()}">
+                    <th:block th:text="#{ui.no.comments}">No comments.</th:block>
+                </p>
+                <div class="rf-panel-body border-top" th:if="${@perm.hasOnService('COMMENT_WRITE', service)}">
+                    <form th:action="@{/services/{id}/comments(id=${service.id})}" method="post">
+                        <div class="mb-2">
+                            <label class="form-label" for="commentBody"><th:block th:text="#{ui.new.comment}">New comment</th:block></label>
+                            <textarea class="form-control form-control-sm" id="commentBody" name="body" rows="2"
+                                      required th:placeholder="#{ui.e.g.this.service.is.used.by.the.customer.portal}"></textarea>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" type="submit">
+                            <i class="bi bi-send"></i> <th:block th:text="#{ui.post}">Post</th:block>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

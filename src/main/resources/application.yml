@@ -1,0 +1,85 @@
+spring:
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+  application:
+    name: red-fish-api-catalog
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:redfish_catalog}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      pool-name: redfish-pool
+      maximum-pool-size: 10
+      connection-timeout: 10000
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  thymeleaf:
+    cache: ${THYMELEAF_CACHE:true}
+
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 24MB
+
+  session:
+    timeout: 8h
+
+  mvc:
+    problemdetails:
+      enabled: false
+
+server:
+  port: ${PORT:8080}
+  error:
+    whitelabel:
+      enabled: false
+  servlet:
+    session:
+      timeout: 8h
+      cookie:
+        http-only: true
+        same-site: lax
+  compression:
+    enabled: true
+    mime-types: text/html,text/css,application/javascript,application/json,image/svg+xml
+  shutdown: graceful
+
+catalog:
+  storage-dir: ${CATALOG_STORAGE:data/storage}
+  max-upload-bytes: 10485760
+  api-test-timeout: 30s
+  import-fetch-timeout: 20s
+  health-check-enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: INFO
+    it.fn.redfish.catalog: INFO
+    org.springframework.security: WARN

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(${editing} ? #{ui.edit.group} : #{ui.new.group}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title" th:text="${editing} ? #{ui.edit.group} : #{ui.new.group}">Gruppo</h1>
+            <p class="rf-page-subtitle" th:if="${editing}" th:text="${group.path}"></p>
+        </div>
+    </div>
+
+    <div class="rf-panel" style="max-width: 46rem">
+        <div class="rf-panel-body">
+            <form th:action="${editing} ? @{/catalog/{id}(id=${groupForm.id})} : @{/catalog}"
+                  th:object="${groupForm}" method="post" novalidate>
+                <div class="row g-3">
+                    <div class="col-md-7">
+                        <label class="form-label rf-required" for="name"><th:block th:text="#{ui.name}">Name</th:block></label>
+                        <input class="form-control" id="name" type="text" th:field="*{name}" required
+                               data-slug-source="#slug">
+                        <div class="text-danger rf-small" th:if="${#fields.hasErrors('name')}"
+                             th:errors="*{name}"></div>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label" for="slug"><th:block th:text="#{ui.identifier.slug}">Identifier (slug)</th:block></label>
+                        <input class="form-control rf-mono" id="slug" type="text" th:field="*{slug}"
+                               data-slug-field th:placeholder="#{ui.generated.from.the.name}">
+                        <div class="form-text"><th:block th:text="#{ui.used.in.the.group.path}">Used in the group path.</th:block></div>
+                    </div>
+                    <div class="col-md-7">
+                        <label class="form-label" for="parentId"><th:block th:text="#{ui.parent.group}">Parent group</th:block></label>
+                        <select class="form-select" id="parentId" th:field="*{parentId}">
+                            <option value=""><th:block th:text="#{ui.none.root.group}">— none (root group) —</th:block></option>
+                            <option th:each="g : ${groupOptions}" th:value="${g.id}" th:text="${g.label}"></option>
+                        </select>
+                        <div class="form-text" th:if="${editing}">
+                            <th:block th:text="#{ui.moving.the.group.also.updates.its.subgroups.paths}">Moving the group also updates its subgroups&#x27; paths.</th:block>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label" for="sortOrder"><th:block th:text="#{ui.sort.order}">Sort order</th:block></label>
+                        <input class="form-control" id="sortOrder" type="number" th:field="*{sortOrder}" min="0">
+                        <div class="form-text"><th:block th:text="#{ui.lower.values.appear.first}">Lower values appear first.</th:block></div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="description"><th:block th:text="#{ui.description}">Description</th:block></label>
+                        <textarea class="form-control" id="description" rows="2" th:field="*{description}"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="documentation"><th:block th:text="#{ui.documentation}">Documentation</th:block></label>
+                        <textarea class="form-control rf-mono" id="documentation" rows="8"
+                                  th:field="*{documentation}"
+                                  th:placeholder="#{ui.notes.conventions.references.this.text.is.displayed.on.the.group.page}"></textarea>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-3">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-check2"></i> <span th:text="${editing} ? #{ui.save} : #{ui.create.group}"></span>
+                    </button>
+                    <a class="btn btn-outline-secondary"
+                       th:href="${editing} ? @{/catalog/{id}(id=${groupForm.id})} : @{/catalog}"><th:block th:text="#{ui.cancel}">Cancel</th:block></a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+</body>
+</html>

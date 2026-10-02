@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(#{ui.revisions.3} + ${service.name}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title"><th:block th:text="#{ui.specification.revisions}">Specification revisions</th:block></h1>
+            <p class="rf-page-subtitle">
+                <a th:href="@{/services/{id}(id=${service.id})}" th:text="${service.name}"></a>
+                · <span th:text="${versions.size()}">0</span> <th:block th:text="#{ui.stored.revisions}">stored revisions</th:block>
+            </p>
+        </div>
+        <div class="rf-page-actions">
+            <a class="btn btn-sm btn-outline-secondary" th:href="@{/services/{id}/diff(id=${service.id})}"
+               th:if="${versions.size() &gt; 1}">
+                <i class="bi bi-file-diff"></i> <th:block th:text="#{ui.compare}">Compare</th:block>
+            </a>
+            <a class="btn btn-sm btn-primary" th:href="@{/import(serviceId=${service.id})}"
+               th:if="${@perm.hasOnService('IMPORT_SWAGGER', service) or @perm.hasOnService('IMPORT_GRPC', service)}">
+                <i class="bi bi-cloud-arrow-up"></i> <th:block th:text="#{ui.new.revision}">New revision</th:block>
+            </a>
+        </div>
+    </div>
+
+    <div class="rf-panel">
+        <div class="table-responsive" th:if="${!versions.isEmpty()}">
+            <table class="table rf-table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Rev.</th>
+                    <th><th:block th:text="#{ui.version}">Version</th:block></th>
+                    <th><th:block th:text="#{ui.format}">Format</th:block></th>
+                    <th><th:block th:text="#{ui.source}">Source</th:block></th>
+                    <th>Endpoint</th>
+                    <th><th:block th:text="#{ui.models.2}">Models</th:block></th>
+                    <th><th:block th:text="#{ui.size}">Size</th:block></th>
+                    <th><th:block th:text="#{ui.imported}">Imported</th:block></th>
+                    <th><th:block th:text="#{ui.by}">By</th:block></th>
+                    <th><th:block th:text="#{ui.notes}">Notes</th:block></th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="v : ${versions}">
+                    <td>
+                        <span class="badge" th:classappend="${v.current} ? 'text-bg-primary' : 'text-bg-secondary'"
+                              th:text="'r' + ${v.revision}"></span>
+                        <div class="rf-muted rf-small" th:if="${v.current}"><th:block th:text="#{ui.current.2}">current</th:block></div>
+                    </td>
+                    <td class="rf-small" th:text="${v.versionLabel != null} ? ${v.versionLabel} : '—'"></td>
+                    <td class="rf-small" th:text="${v.specFormat.label}"></td>
+                    <td class="rf-small">
+                        <span th:text="${v.sourceType.label}"></span>
+                        <div class="rf-muted" style="word-break: break-all" th:if="${v.sourceUrl != null}"
+                             th:text="${v.sourceUrl}"></div>
+                        <div class="rf-muted" th:if="${v.fileName != null}" th:text="${v.fileName}"></div>
+                    </td>
+                    <td th:text="${v.endpointCount}"></td>
+                    <td th:text="${v.modelCount}"></td>
+                    <td class="rf-small" th:text="${#numbers.formatInteger(v.sizeBytes / 1024, 0)} + ' KB'"></td>
+                    <td class="rf-small rf-muted"
+                        th:text="${#temporals.format(v.importedAt.atZone(T(java.time.ZoneId).systemDefault()), #messages.msg('format.datetime.short'))}"></td>
+                    <td class="rf-small rf-muted" th:text="${v.importedByUsername}"></td>
+                    <td class="rf-small" th:text="${v.notes}"></td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/services/{id}(id=${service.id},version=${v.id})}"
+                           th:title="#{ui.view}">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a class="btn btn-sm btn-outline-secondary"
+                           th:if="${@perm.hasOnService('SPEC_DOWNLOAD', service)}"
+                           th:href="@{/services/{id}/versions/{vid}/download(id=${service.id},vid=${v.id})}"
+                           th:title="#{ui.download.original}">
+                            <i class="bi bi-download"></i>
+                        </a>
+                        <form class="d-inline" method="post" th:if="${!v.current and @perm.hasOnService('SERVICE_EDIT', service)}"
+                              th:action="@{/services/{id}/versions/{vid}/current(id=${service.id},vid=${v.id})}">
+                            <button class="btn btn-sm btn-outline-primary" type="submit"
+                                    th:title="#{ui.set.as.current}">
+                                <i class="bi bi-check2-circle"></i>
+                            </button>
+                        </form>
+                        <form class="d-inline" method="post" th:if="${@perm.hasOnService('SERVICE_DELETE', service)}"
+                              th:action="@{/services/{id}/versions/{vid}/delete(id=${service.id},vid=${v.id})}">
+                            <button class="btn btn-sm btn-outline-danger" type="submit"
+                                    th:attr="data-confirm=#{ui.delete.revision.r} + ${v.revision} + '?'"
+                                    th:title="#{ui.delete}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="rf-empty" th:if="${versions.isEmpty()}">
+            <i class="bi bi-inbox"></i> <th:block th:text="#{ui.no.specification.imported}">No specification imported.</th:block>
+        </div>
+    </div>
+</section>
+</body>
+</html>

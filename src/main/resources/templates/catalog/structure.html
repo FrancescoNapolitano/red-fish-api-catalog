@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(#{ui.catalog}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title"><th:block th:text="#{ui.catalog.structure}">Catalog structure</th:block></h1>
+            <p class="rf-page-subtitle"><th:block th:text="#{ui.groups.and.subgroups.with.their.service.counts}">Groups and subgroups with their service counts</th:block></p>
+        </div>
+        <div class="rf-page-actions">
+            <a class="btn btn-sm btn-primary" th:href="@{/catalog/new}" th:if="${@perm.hasAnywhere('GROUP_CREATE')}">
+                <i class="bi bi-folder-plus"></i> <th:block th:text="#{ui.new.root.group}">New root group</th:block>
+            </a>
+        </div>
+    </div>
+
+    <div class="rf-panel">
+        <div class="rf-panel-body" th:if="${!tree.isEmpty()}">
+            <th:block th:replace="~{fragments/catalog-branch :: branch(${tree})}"></th:block>
+        </div>
+        <div class="rf-empty" th:if="${tree.isEmpty()}">
+            <i class="bi bi-diagram-3"></i>
+            <th:block th:text="#{ui.the.catalog.is.empty}">The catalog is empty.</th:block>
+            <div class="mt-2" th:if="${@perm.hasAnywhere('GROUP_CREATE')}">
+                <a class="btn btn-sm btn-primary" th:href="@{/catalog/new}"><th:block th:text="#{ui.create.the.first.group}">Create the first group</th:block></a>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

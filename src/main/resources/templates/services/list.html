@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(#{ui.services}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title"><th:block th:text="#{ui.services}">Services</th:block></h1>
+            <p class="rf-page-subtitle"><span th:text="${services.size()}">0</span> <th:block th:text="#{ui.services.in.the.catalog}">services in the catalog</th:block></p>
+        </div>
+        <div class="rf-page-actions">
+            <a class="btn btn-sm btn-outline-secondary" th:href="@{/services/new}"
+               th:if="${@perm.hasAnywhere('SERVICE_CREATE')}">
+                <i class="bi bi-plus-lg"></i> <th:block th:text="#{ui.new.service.2}">New service</th:block>
+            </a>
+            <a class="btn btn-sm btn-primary" th:href="@{/import}"
+               th:if="${@perm.hasAnywhere('IMPORT_SWAGGER') or @perm.hasAnywhere('IMPORT_GRPC')}">
+                <i class="bi bi-cloud-arrow-up"></i> <th:block th:text="#{ui.import}">Import</th:block>
+            </a>
+        </div>
+    </div>
+
+    <form class="rf-panel mb-3" th:action="@{/services}" method="get">
+        <div class="rf-panel-body row g-2 align-items-end">
+            <div class="col-sm-4 col-md-3">
+                <label class="form-label" for="type"><th:block th:text="#{ui.type}">Type</th:block></label>
+                <select class="form-select form-select-sm" id="type" name="type">
+                    <option value=""><th:block th:text="#{ui.all}">all</th:block></option>
+                    <option value="REST" th:selected="${filterType == 'REST'}">REST</option>
+                    <option value="GRPC" th:selected="${filterType == 'GRPC'}">gRPC</option>
+                </select>
+            </div>
+            <div class="col-sm-4 col-md-3">
+                <label class="form-label" for="status"><th:block th:text="#{ui.status}">Status</th:block></label>
+                <select class="form-select form-select-sm" id="status" name="status">
+                    <option value=""><th:block th:text="#{ui.all}">all</th:block></option>
+                    <option value="ACTIVE" th:selected="${filterStatus == 'ACTIVE'}"><th:block th:text="#{ui.active}">Active</th:block></option>
+                    <option value="DEPRECATED" th:selected="${filterStatus == 'DEPRECATED'}">Deprecated</option>
+                </select>
+            </div>
+            <div class="col-sm-4 col-md-2">
+                <button class="btn btn-sm btn-outline-primary w-100" type="submit">
+                    <i class="bi bi-funnel"></i> <th:block th:text="#{ui.filter}">Filter</th:block>
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <div class="rf-panel">
+        <div class="table-responsive" th:if="${!services.isEmpty()}">
+            <table class="table rf-table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th><th:block th:text="#{ui.service}">Service</th:block></th>
+                    <th><th:block th:text="#{ui.group}">Group</th:block></th>
+                    <th><th:block th:text="#{ui.type}">Type</th:block></th>
+                    <th><th:block th:text="#{ui.version}">Version</th:block></th>
+                    <th>Tag</th>
+                    <th><th:block th:text="#{ui.status}">Status</th:block></th>
+                    <th><th:block th:text="#{ui.updated}">Updated</th:block></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${services}">
+                    <td>
+                        <i class="bi" th:classappend="${favoriteIds.contains(s.id)}
+                                      ? 'bi-star-fill text-warning' : 'bi-star rf-muted'"></i>
+                    </td>
+                    <td>
+                        <a th:href="@{/services/{id}(id=${s.id})}" th:text="${s.name}"></a>
+                        <div class="rf-muted rf-small" th:if="${s.description != null}"
+                             th:text="${#strings.abbreviate(s.description, 80)}"></div>
+                    </td>
+                    <td class="rf-small">
+                        <a th:href="@{/catalog/{id}(id=${s.group.id})}" th:text="${s.group.path}"></a>
+                    </td>
+                    <td><span class="rf-chip" th:text="${s.serviceType.label}"></span></td>
+                    <td class="rf-small" th:text="${s.version != null} ? ${s.version} : '—'"></td>
+                    <td>
+                        <span class="rf-tag me-1" th:each="t : ${s.tags}"
+                              th:style="'background-color:' + ${t.color}" th:text="${t.name}"></span>
+                    </td>
+                    <td>
+                        <span class="badge" th:classappend="${s.deprecated} ? 'text-bg-danger' : 'text-bg-success'"
+                              th:text="${s.status.label}"></span>
+                    </td>
+                    <td class="rf-small rf-muted"
+                        th:text="${#temporals.format(s.updatedAt.atZone(T(java.time.ZoneId).systemDefault()), #messages.msg('format.datetime.short'))}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="rf-empty" th:if="${services.isEmpty()}">
+            <i class="bi bi-inbox"></i> <th:block th:text="#{ui.no.services.match.the.selected.filters}">No services match the selected filters.</th:block>
+        </div>
+    </div>
+</section>
+</body>
+</html>

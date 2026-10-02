@@ -1,0 +1,202 @@
+openapi: 3.0.3
+info:
+  title: Payments SEPA API
+  version: 1.0.0
+  description: |
+    API per l'inizializzazione e la consultazione dei bonifici SEPA.
+servers:
+  - url: https://api-dev.example.com/sepa/v1
+    description: Ambiente di sviluppo
+security:
+  - bearerAuth: []
+tags:
+  - name: transfers
+    description: Bonifici
+paths:
+  /transfers:
+    get:
+      operationId: listTransfers
+      summary: Elenca i bonifici
+      description: Restituisce la lista paginata dei bonifici disponibili.
+      tags: [transfers]
+      parameters:
+        - name: page
+          in: query
+          description: Indice della pagina, base zero
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          description: Filtro per stato
+          schema:
+            type: string
+            enum: [PENDING, EXECUTED, REJECTED]
+        - name: X-Request-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Elenco restituito
+          headers:
+            X-Total-Count:
+              description: Numero totale di elementi
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transfer'
+        '401':
+          description: Non autenticato
+        '500':
+          description: Errore interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    post:
+      operationId: createTransfer
+      summary: Crea un bonifico
+      tags: [transfers]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '201':
+          description: Bonifico creato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '400':
+          description: Richiesta non valida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /transfers/{transferId}:
+    get:
+      operationId: getTransfer
+      summary: Dettaglio di un bonifico
+      tags: [transfers]
+      parameters:
+        - name: transferId
+          in: path
+          required: true
+          description: Identificativo del bonifico
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Trovato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '404':
+          description: Non trovato
+    delete:
+      operationId: cancelTransfer
+      summary: Annulla un bonifico
+      deprecated: true
+      tags: [transfers]
+      parameters:
+        - name: transferId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Annullato
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT rilasciato dal servizio Identity
+  schemas:
+    Transfer:
+      type: object
+      description: Bonifico SEPA
+      required: [id, amount, currency, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+        currency:
+          type: string
+          enum: [EUR]
+        status:
+          type: string
+          enum: [PENDING, EXECUTED, REJECTED]
+        debtor:
+          $ref: '#/components/schemas/Party'
+        creditor:
+          $ref: '#/components/schemas/Party'
+        createdAt:
+          type: string
+          format: date-time
+    TransferRequest:
+      type: object
+      required: [amount, currency, creditor]
+      properties:
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+          default: EUR
+        creditor:
+          $ref: '#/components/schemas/Party'
+        remittanceInformation:
+          type: string
+          maxLength: 140
+    Party:
+      type: object
+      required: [name, iban]
+      properties:
+        name:
+          type: string
+          maxLength: 70
+        iban:
+          type: string
+          pattern: '^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$'
+    Problem:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string

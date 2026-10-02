@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(${apiModel.name}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title rf-mono" th:text="${apiModel.name}">Modello</h1>
+            <p class="rf-page-subtitle">
+                <span class="rf-chip">
+                    <i class="bi" th:classappend="${apiModel.kind.name() == 'ENUM'} ? 'bi-list-ol' : 'bi-box'"></i>
+                    <span th:text="${apiModel.kind.label}">Schema</span>
+                </span>
+                · <a th:href="@{/services/{id}(id=${service.id})}" th:text="${service.name}">Servizio</a>
+                <span th:if="${selectedVersion != null}"
+                      th:text="#{ui.revision.2} + ${selectedVersion.displayLabel}"></span>
+            </p>
+            <p class="rf-page-subtitle" th:if="${apiModel.description != null}"
+               th:text="${apiModel.description}"></p>
+        </div>
+        <div class="rf-page-actions">
+            <a class="btn btn-sm btn-outline-secondary" th:href="@{/services/{id}/models(id=${service.id})}">
+                <i class="bi bi-collection"></i> <th:block th:text="#{ui.all.models}">All models</th:block>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="rf-panel h-100">
+                <div class="rf-panel-header"><i class="bi bi-diagram-2"></i> <th:block th:text="#{ui.structure}">Structure</th:block></div>
+                <div class="rf-panel-body">
+                    <th:block th:replace="~{fragments/schema :: tree(${schema})}"></th:block>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="rf-panel mb-3" th:if="${sample != null}">
+                <div class="rf-panel-header"><i class="bi bi-braces-asterisk"></i> <th:block th:text="#{ui.example.2}">Example</th:block></div>
+                <div class="rf-panel-body">
+                    <th:block th:replace="~{fragments/schema :: codeblock('model-sample', ${sample})}"></th:block>
+                </div>
+            </div>
+
+            <div class="rf-panel mb-3" th:if="${!referenced.isEmpty()}">
+                <div class="rf-panel-header">
+                    <i class="bi bi-link-45deg"></i> <th:block th:text="#{ui.related.models}">Related models</th:block>
+                    <span class="badge text-bg-secondary" th:text="${referenced.size()}">0</span>
+                </div>
+                <div class="rf-panel-body d-flex flex-wrap gap-2">
+                    <a class="rf-chip" th:each="r : ${referenced}"
+                       th:href="@{/services/{sid}/models/{mid}(sid=${service.id},mid=${r.id})}"
+                       th:title="${r.description}">
+                        <i class="bi" th:classappend="${r.kind.name() == 'ENUM'} ? 'bi-list-ol' : 'bi-box'"></i>
+                        <span th:text="${r.name}">Nome</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="rf-panel">
+                <div class="rf-panel-header"><i class="bi bi-filetype-json"></i> <th:block th:text="#{ui.original.schema}">Original schema</th:block></div>
+                <div class="rf-panel-body">
+                    <th:block th:replace="~{fragments/schema :: codeblock('model-raw', ${rawSchema})}"></th:block>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

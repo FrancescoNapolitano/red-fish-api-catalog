@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(#{ui.new.user}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title"><th:block th:text="#{ui.new.user}">New user</th:block></h1>
+            <p class="rf-page-subtitle"><th:block th:text="#{ui.share.the.initial.password.with.the.user}">Share the initial password with the user</th:block></p>
+        </div>
+    </div>
+
+    <div class="rf-panel" style="max-width: 46rem">
+        <div class="rf-panel-body">
+            <form th:action="@{/admin/users}" th:object="${userForm}" method="post" novalidate>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label rf-required" for="username">Username</label>
+                        <input class="form-control" id="username" type="text" th:field="*{username}" required>
+                        <div class="text-danger rf-small" th:if="${#fields.hasErrors('username')}"
+                             th:errors="*{username}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="email">Email</label>
+                        <input class="form-control" id="email" type="email" th:field="*{email}">
+                        <div class="text-danger rf-small" th:if="${#fields.hasErrors('email')}"
+                             th:errors="*{email}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label rf-required" for="firstName"><th:block th:text="#{ui.name}">Name</th:block></label>
+                        <input class="form-control" id="firstName" type="text" th:field="*{firstName}" required>
+                        <div class="text-danger rf-small" th:if="${#fields.hasErrors('firstName')}"
+                             th:errors="*{firstName}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label rf-required" for="lastName"><th:block th:text="#{ui.last.name}">Last name</th:block></label>
+                        <input class="form-control" id="lastName" type="text" th:field="*{lastName}" required>
+                        <div class="text-danger rf-small" th:if="${#fields.hasErrors('lastName')}"
+                             th:errors="*{lastName}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label rf-required" for="password"><th:block th:text="#{ui.initial.password}">Initial password</th:block></label>
+                        <div class="input-group">
+                            <input class="form-control rf-mono" id="password" type="text" th:field="*{password}"
+                                   th:placeholder="${suggestedPassword}" required>
+                            <button class="btn btn-outline-secondary" type="button" data-action="copy"
+                                    th:attr="data-copy-text=${suggestedPassword}" th:title="#{ui.copy.suggested.password}">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            <th:block th:text="#{ui.suggested}">Suggested:</th:block> <code th:text="${suggestedPassword}"></code> <th:block th:text="#{ui.at.least.8.characters.2}">— at least 8 characters.</th:block>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><th:block th:text="#{ui.roles}">Roles</th:block></label>
+                        <div class="d-flex flex-column gap-1">
+                            <div class="form-check" th:each="r : ${roles}">
+                                <input class="form-check-input" type="checkbox" th:field="*{roleIds}"
+                                       th:value="${r.id}" th:id="'role-' + ${r.id}">
+                                <label class="form-check-label" th:for="'role-' + ${r.id}">
+                                    <span th:text="${r.name}"></span>
+                                    <span class="rf-muted rf-small" th:text="${r.description}"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-text"><th:block th:text="#{ui.viewer.is.assigned.if.no.role.is.selected}">VIEWER is assigned if no role is selected.</th:block></div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" id="enabled" type="checkbox" th:field="*{enabled}">
+                            <label class="form-check-label" for="enabled"><th:block th:text="#{ui.active.user}">Active user</th:block></label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" id="mustChangePassword" type="checkbox"
+                                   th:field="*{mustChangePassword}">
+                            <label class="form-check-label" for="mustChangePassword">
+                                <th:block th:text="#{ui.must.change.password.at.first.sign.in}">Must change password at first sign-in</th:block>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-3">
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-check2"></i> <th:block th:text="#{ui.create.user}">Create user</th:block></button>
+                    <a class="btn btn-outline-secondary" th:href="@{/admin/users}"><th:block th:text="#{ui.cancel}">Cancel</th:block></a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+</body>
+</html>

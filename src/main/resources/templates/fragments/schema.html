@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="tree(schema)">
+    <div class="rf-small mb-2" th:if="${schema != null}">
+        <span class="rf-chip" th:text="${schema.typeLabel}">object</span>
+        <span class="rf-muted ms-1" th:if="${schema.description != null}" th:text="${schema.description}"></span>
+        <span class="rf-muted ms-1" th:if="${schema.truncated}">
+            <th:block th:text="#{ui.unresolved.or.recursive.reference}">(unresolved or recursive reference)</th:block>
+        </span>
+    </div>
+    <div class="table-responsive" th:if="${schema != null and !schema.children.isEmpty()}">
+        <table class="table rf-table table-sm mb-0">
+            <thead>
+            <tr>
+                <th style="min-width: 12rem"><th:block th:text="#{ui.field}">Field</th:block></th>
+                <th><th:block th:text="#{ui.type}">Type</th:block></th>
+                <th><th:block th:text="#{ui.req}">Req.</th:block></th>
+                <th><th:block th:text="#{ui.description.constraints}">Description / constraints</th:block></th>
+            </tr>
+            </thead>
+            <tbody>
+            <th:block th:replace="~{fragments/schema :: rows(${schema.children}, 0)}"></th:block>
+            </tbody>
+        </table>
+    </div>
+    <p class="rf-muted rf-small mb-0"
+       th:if="${schema != null and schema.children.isEmpty() and schema.enumValues.isEmpty()}">
+        <th:block th:text="#{ui.simple.type.no.structured.fields}">Simple type, no structured fields.</th:block>
+    </p>
+    <div class="rf-small" th:if="${schema != null and !schema.enumValues.isEmpty()}">
+        <th:block th:text="#{ui.allowed.values}">Allowed values:</th:block>
+        <code th:each="v, it : ${schema.enumValues}"
+              th:text="${v} + (${it.last} ? '' : ', ')"></code>
+    </div>
+</div>
+
+<th:block th:fragment="rows(nodes, depth)">
+    <th:block th:each="node : ${nodes}">
+        <tr>
+            <td>
+                <span th:style="'padding-left:' + ${depth * 1.1} + 'rem'"></span>
+                <span class="rf-mono" th:classappend="${node.required} ? 'fw-semibold' : ''" th:text="${node.name}">campo</span>
+                <span class="text-danger" th:if="${node.required}" th:title="#{ui.required}">*</span>
+                <span class="badge text-bg-warning rf-small" th:if="${node.deprecated}">deprecated</span>
+                <span class="rf-muted rf-small" th:if="${node.oneofName != null}"
+                      th:text="'oneof ' + ${node.oneofName}"></span>
+            </td>
+            <td class="rf-small">
+                <code th:text="${node.typeLabel}">string</code>
+                <span class="rf-muted" th:if="${node.protoType != null}" th:text="' · ' + ${node.protoType}"></span>
+                <span class="rf-muted" th:if="${node.fieldNumber != null}" th:text="' · #' + ${node.fieldNumber}"></span>
+                <span class="rf-muted" th:if="${node.readOnly}"> · readOnly</span>
+                <span class="rf-muted" th:if="${node.writeOnly}"> · writeOnly</span>
+            </td>
+            <td class="rf-small text-center">
+                <i class="bi" th:classappend="${node.required} ? 'bi-check-lg text-success' : 'bi-dash rf-muted'"></i>
+            </td>
+            <td class="rf-small">
+                <span th:if="${node.description != null}" th:text="${node.description}"></span>
+                <div class="rf-muted" th:if="${node.constraints != null}" th:text="${node.constraints}"></div>
+                <div class="rf-muted" th:if="${node.defaultValue != null}"
+                     th:text="'default: ' + ${node.defaultValue}"></div>
+                <div th:if="${!node.enumValues.isEmpty()}">
+                    <code th:each="v, it : ${node.enumValues}" th:text="${v} + (${it.last} ? '' : ' | ')"></code>
+                </div>
+                <div class="rf-muted" th:if="${node.truncated}"><th:block th:text="#{ui.unexpanded.reference}">unexpanded reference</th:block></div>
+            </td>
+        </tr>
+        <th:block th:if="${!node.children.isEmpty()}"
+                  th:replace="~{fragments/schema :: rows(${node.children}, ${depth + 1})}"></th:block>
+    </th:block>
+</th:block>
+
+<div th:fragment="codeblock(id, content)" class="rf-code-holder" th:if="${content != null}">
+    <button class="btn btn-sm btn-outline-secondary rf-copy" type="button" data-action="copy"
+            th:attr="data-copy-target='#' + ${id}" th:title="#{ui.copy}">
+        <i class="bi bi-clipboard"></i>
+    </button>
+    <pre class="rf-code" th:id="${id}" th:text="${content}"></pre>
+</div>
+
+<span th:fragment="method(method)" class="rf-method"
+      th:classappend="'rf-method-' + ${#strings.toLowerCase(method)}" th:text="${method}">GET</span>
+
+</body>
+</html>

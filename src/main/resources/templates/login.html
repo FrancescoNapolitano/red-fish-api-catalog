@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/plain :: page(#{ui.sign.in}, ~{::section})}">
+<body>
+<section class="rf-card-narrow">
+    <div class="rf-panel">
+        <div class="rf-panel-body">
+            <h1 class="h6 mb-3"><th:block th:text="#{ui.sign.in.to.the.catalog}">Sign in to the catalog</th:block></h1>
+
+            <div class="alert alert-danger py-2 rf-small" th:if="${param.error != null}">
+                <i class="bi bi-exclamation-circle"></i> <th:block th:text="#{ui.invalid.credentials.or.disabled.account}">Invalid credentials or disabled account.</th:block>
+            </div>
+            <div class="alert alert-secondary py-2 rf-small" th:if="${param.logout != null}">
+                <th:block th:text="#{ui.you.have.signed.out.successfully}">You have signed out successfully.</th:block>
+            </div>
+            <div class="alert alert-warning py-2 rf-small" th:if="${param.expired != null}">
+                <th:block th:text="#{ui.your.session.has.expired.please.sign.in.again}">Your session has expired. Please sign in again.</th:block>
+            </div>
+            <div class="alert alert-success py-2 rf-small" th:if="${param.setup != null}">
+                <i class="bi bi-check-circle"></i> <th:block th:text="#{ui.setup.complete.sign.in.with.the.account.you.just.created}">Setup complete. Sign in with the account you just created.</th:block>
+            </div>
+
+            <form th:action="@{/login}" method="post" novalidate>
+                <div class="mb-3">
+                    <label class="form-label" for="username">Username</label>
+                    <input class="form-control" id="username" name="username" type="text" autocomplete="username"
+                           th:value="${param.username}" required autofocus>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="password">Password</label>
+                    <input class="form-control" id="password" name="password" type="password"
+                           autocomplete="current-password" required>
+                </div>
+                <button class="btn btn-primary w-100" type="submit">
+                    <i class="bi bi-box-arrow-in-right"></i> <th:block th:text="#{ui.sign.in.2}">Sign in</th:block>
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+</body>
+</html>

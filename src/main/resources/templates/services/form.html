@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(${editing} ? #{ui.edit.service} : #{ui.new.service.2}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div>
+            <h1 class="rf-page-title" th:text="${editing} ? #{ui.edit.service} : #{ui.new.service.2}">Servizio</h1>
+            <p class="rf-page-subtitle" th:if="${editing}" th:text="${service.group.path}"></p>
+        </div>
+    </div>
+
+    <div class="rf-panel" style="max-width: 48rem">
+        <div class="rf-panel-body">
+            <form th:action="${editing} ? @{/services/{id}(id=${serviceForm.id})} : @{/services}"
+                  th:object="${serviceForm}" method="post" novalidate>
+                <div class="row g-3">
+                    <div class="col-md-7">
+                        <label class="form-label rf-required" for="name"><th:block th:text="#{ui.name}">Name</th:block></label>
+                        <input class="form-control" id="name" type="text" th:field="*{name}" required
+                               data-slug-source="#slug">
+                        <div class="text-danger rf-small" th:if="${#fields.hasErrors('name')}"
+                             th:errors="*{name}"></div>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label" for="slug"><th:block th:text="#{ui.identifier.slug}">Identifier (slug)</th:block></label>
+                        <input class="form-control rf-mono" id="slug" type="text" th:field="*{slug}"
+                               data-slug-field th:placeholder="#{ui.generated.from.the.name}">
+                    </div>
+                    <div class="col-md-7">
+                        <label class="form-label rf-required" for="groupId"><th:block th:text="#{ui.group}">Group</th:block></label>
+                        <select class="form-select" id="groupId" th:field="*{groupId}" required>
+                            <option value=""><th:block th:text="#{ui.select}">— select —</th:block></option>
+                            <option th:each="g : ${groupOptions}" th:value="${g.id}" th:text="${g.label}"></option>
+                        </select>
+                        <div class="text-danger rf-small" th:if="${#fields.hasErrors('groupId')}"
+                             th:errors="*{groupId}"></div>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label" for="version"><th:block th:text="#{ui.version}">Version</th:block></label>
+                        <input class="form-control" id="version" type="text" th:field="*{version}"
+                               th:placeholder="#{ui.e.g.1.2.0}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label rf-required" for="serviceType"><th:block th:text="#{ui.type}">Type</th:block></label>
+                        <select class="form-select" id="serviceType" th:field="*{serviceType}">
+                            <option th:each="t : ${serviceTypes}" th:value="${t}" th:text="${t.label}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label rf-required" for="status"><th:block th:text="#{ui.status}">Status</th:block></label>
+                        <select class="form-select" id="status" th:field="*{status}">
+                            <option th:each="s : ${serviceStatuses}" th:value="${s}" th:text="${s.label}"></option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="tags">Tag</label>
+                        <input class="form-control" id="tags" type="text" th:field="*{tags}"
+                               placeholder="Internal, PSD2, Partner">
+                        <div class="form-text">
+                            <th:block th:text="#{ui.comma.separated.new.tags.are.created.automatically.available}">Comma-separated; new tags are created automatically. Available:</th:block>
+                            <span th:each="t, it : ${allTags}">
+                                <code th:text="${t.name}"></code><span th:if="${!it.last}">, </span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="description"><th:block th:text="#{ui.description}">Description</th:block></label>
+                        <textarea class="form-control" id="description" rows="4" th:field="*{description}"></textarea>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-3">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-check2"></i> <span th:text="${editing} ? #{ui.save} : #{ui.create.service}"></span>
+                    </button>
+                    <a class="btn btn-outline-secondary"
+                       th:href="${editing} ? @{/services/{id}(id=${serviceForm.id})} : @{/services}"><th:block th:text="#{ui.cancel}">Cancel</th:block></a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+</body>
+</html>

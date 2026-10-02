@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: page(${endpoint.httpMethod} + ' ' + ${endpoint.path}, ~{::section})}">
+<body>
+<section>
+    <div class="rf-page-header">
+        <div style="min-width: 0">
+            <h1 class="rf-page-title d-flex align-items-center gap-2 flex-wrap">
+                <th:block th:replace="~{fragments/schema :: method(${endpoint.httpMethod})}"></th:block>
+                <span class="rf-mono" style="font-size: 1.05rem; word-break: break-all"
+                      th:text="${endpoint.path}">/path</span>
+                <span class="badge text-bg-warning" th:if="${endpoint.deprecated}">deprecated</span>
+            </h1>
+            <p class="rf-page-subtitle">
+                <a th:href="@{/services/{id}(id=${service.id})}" th:text="${service.name}"></a>
+                <th:block th:text="#{ui.revision}">· revision</th:block> <span th:text="${selectedVersion.displayLabel}"></span>
+                <span th:if="${endpoint.summary != null}" th:text="' · ' + ${endpoint.summary}"></span>
+            </p>
+        </div>
+        <div class="rf-page-actions">
+            <a class="btn btn-sm btn-outline-secondary" th:href="@{/services/{id}(id=${service.id})}">
+                <i class="bi bi-arrow-left"></i> <th:block th:text="#{ui.service}">Service</th:block>
+            </a>
+            <a class="btn btn-sm btn-outline-secondary"
+               th:href="@{/services/{sid}/models(sid=${service.id},endpointId=${endpoint.id})}">
+                <i class="bi bi-braces"></i> <th:block th:text="#{ui.referenced.models}">Referenced models</th:block>
+            </a>
+            <a class="btn btn-sm btn-outline-secondary"
+               th:if="${@perm.hasOnService('SPEC_DOWNLOAD', service)}"
+               th:href="@{/services/{id}/versions/{vid}/download(id=${service.id},vid=${selectedVersion.id})}">
+                <i class="bi bi-download"></i> <th:block th:text="#{ui.specification}">Specification</th:block>
+            </a>
+        </div>
+    </div>
+
+    <form class="d-flex align-items-center gap-2 mb-3" th:if="${!environments.isEmpty()}"
+          th:action="@{/services/{sid}/endpoints/{eid}(sid=${service.id},eid=${endpoint.id})}" method="get">
+        <label class="form-label mb-0" for="environmentId"><th:block th:text="#{ui.environment}">Environment</th:block></label>
+        <select class="form-select form-select-sm" id="environmentId" name="environmentId" style="max-width: 18rem"
+                onchange="this.form.submit()">
+            <option value=""><th:block th:text="#{ui.automatic.environment.or.specification}">Automatic (environment or specification)</th:block></option>
+            <option th:each="env : ${environments}" th:value="${env.id}"
+                    th:selected="${selectedEnvironmentId != null and selectedEnvironmentId == env.id}"
+                    th:text="${env.name} + (${env.baseUrl != null} ? ' — ' + ${env.baseUrl} : '')"></option>
+        </select>
+        <span class="rf-muted rf-small">base URL: <code th:text="${baseUrl}"></code></span>
+    </form>
+
+    <div class="alert alert-info" th:if="${#strings.isEmpty(baseUrl)}">
+        <th:block th:text="#{ui.configure.an.environment.url.or.enter.the.full.url.in.the.console.to.t}">Configure an environment URL or enter the full URL in the console to try the request.</th:block>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+
+            <div class="rf-panel mb-3" data-panel="description"
+                 th:if="${endpoint.description != null or endpoint.operationId != null}">
+                <button type="button" class="rf-panel-header rf-panel-toggle" aria-expanded="true">
+                    <i class="bi bi-info-circle"></i> <th:block th:text="#{ui.description}">Description</th:block>
+                    <i class="bi bi-chevron-up rf-muted ms-auto" data-panel-caret></i>
+                </button>
+                <div class="rf-panel-body">
+                    <p class="rf-small" th:if="${endpoint.description != null}" th:text="${endpoint.description}"></p>
+                    <dl class="rf-kv mb-0">
+                        <dt th:if="${endpoint.operationId != null}">operationId</dt>
+                        <dd th:if="${endpoint.operationId != null}"><code th:text="${endpoint.operationId}"></code></dd>
+                        <dt th:if="${endpoint.tags != null}">Tag</dt>
+                        <dd th:if="${endpoint.tags != null}" th:text="${endpoint.tags}"></dd>
+                        <dt th:if="${endpoint.consumes != null}"><th:block th:text="#{ui.accepted.content.types}">Accepted content types</th:block></dt>
+                        <dd th:if="${endpoint.consumes != null}" th:text="${endpoint.consumes}"></dd>
+                        <dt th:if="${endpoint.produces != null}"><th:block th:text="#{ui.returned.content.types}">Returned content types</th:block></dt>
+                        <dd th:if="${endpoint.produces != null}" th:text="${endpoint.produces}"></dd>
+                        <th:block th:if="${endpoint.grpc}">
+                            <dt><th:block th:text="#{ui.grpc.service}">gRPC service</th:block></dt>
+                            <dd><code th:text="${endpoint.grpcService}"></code></dd>
+                            <dt><th:block th:text="#{ui.method}">Method</th:block></dt>
+                            <dd><code th:text="${endpoint.grpcMethod}"></code></dd>
+                            <dt>Streaming</dt>
+                            <dd th:text="${endpoint.grpcStreaming}"></dd>
+                            <dt><th:block th:text="#{ui.types}">Types</th:block></dt>
+                            <dd>
+                                <code th:text="${endpoint.grpcRequestType}"></code> →
+                                <code th:text="${endpoint.grpcResponseType}"></code>
+                            </dd>
+                        </th:block>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="rf-panel mb-3" data-panel="params" th:if="${view.hasParams()}">
+                <button type="button" class="rf-panel-header rf-panel-toggle" aria-expanded="true">
+                    <i class="bi bi-sliders"></i> <th:block th:text="#{ui.parameters}">Parameters</th:block>
+                    <i class="bi bi-chevron-up rf-muted ms-auto" data-panel-caret></i>
+                </button>
+                <div class="rf-panel-body">
+                    <th:block th:replace="~{fragments/params :: paramTable('Path', ${view.pathParams})}"></th:block>
+                    <th:block th:replace="~{fragments/params :: paramTable('Query', ${view.queryParams})}"></th:block>
+                    <th:block th:replace="~{fragments/params :: paramTable('Header', ${view.headerParams})}"></th:block>
+                    <th:block th:replace="~{fragments/params :: paramTable('Cookie', ${view.cookieParams})}"></th:block>
+                </div>
+            </div>
+
+            <div class="rf-panel mb-3" data-panel="request-body" th:if="${view.requestBody != null}">
+                <button type="button" class="rf-panel-header rf-panel-toggle" aria-expanded="true">
+                    <i class="bi bi-box-arrow-in-right"></i> Request body
+                    <span class="badge text-bg-danger rf-small" th:if="${view.requestBody.required}"><th:block th:text="#{ui.required}">required</th:block></span>
+                    <i class="bi bi-chevron-up rf-muted ms-auto" data-panel-caret></i>
+                </button>
+                <div class="rf-panel-body">
+                    <p class="rf-small" th:if="${view.requestBody.description != null}"
+                       th:text="${view.requestBody.description}"></p>
+                    <div th:each="c, ci : ${view.requestBody.contents}" class="mb-3">
+                        <div class="rf-muted rf-small fw-semibold mb-1" th:text="${c.mediaType}"></div>
+                        <th:block th:replace="~{fragments/schema :: tree(${c.schema})}"></th:block>
+                        <div class="mt-2" th:if="${c.sample != null}">
+                            <div class="rf-muted rf-small mb-1"><th:block th:text="#{ui.example.2}">Example</th:block></div>
+                            <th:block th:replace="~{fragments/schema :: codeblock('req-' + ${ci.index}, ${c.sample})}"></th:block>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rf-panel mb-3" data-panel="responses" th:if="${!view.responses.isEmpty()}">
+                <button type="button" class="rf-panel-header rf-panel-toggle" aria-expanded="true">
+                    <i class="bi bi-box-arrow-left"></i> Response
+                    <i class="bi bi-chevron-up rf-muted ms-auto" data-panel-caret></i>
+                </button>
+                <div class="rf-panel-body">
+                    <div th:each="r, ri : ${view.responses}" class="mb-3 pb-3"
+                         th:classappend="${!ri.last} ? 'border-bottom' : ''">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge"
+                                  th:classappend="${#strings.startsWith(r.code, '2')} ? 'text-bg-success'
+                                                  : (${#strings.startsWith(r.code, '4')} ? 'text-bg-warning'
+                                                  : (${#strings.startsWith(r.code, '5')} ? 'text-bg-danger'
+                                                  : 'text-bg-secondary'))"
+                                  th:text="${r.code}">200</span>
+                            <span class="rf-small" th:text="${r.description}"></span>
+                        </div>
+
+                        <div th:if="${!r.headers.isEmpty()}" class="mb-2">
+                            <div class="rf-muted rf-small fw-semibold"><th:block th:text="#{ui.response.headers}">Response headers</th:block></div>
+                            <table class="table rf-table table-sm mb-0">
+                                <tbody>
+                                <tr th:each="h : ${r.headers}">
+                                    <td class="rf-mono rf-small" th:text="${h.name}"></td>
+                                    <td class="rf-small"><code th:text="${h.typeLabel}"></code></td>
+                                    <td class="rf-small" th:text="${h.description}"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div th:each="c, ci : ${r.contents}">
+                            <div class="rf-muted rf-small fw-semibold mb-1" th:text="${c.mediaType}"></div>
+                            <th:block th:replace="~{fragments/schema :: tree(${c.schema})}"></th:block>
+                            <div class="mt-2" th:if="${c.sample != null}">
+                                <div class="rf-muted rf-small mb-1"><th:block th:text="#{ui.example.2}">Example</th:block></div>
+                                <th:block th:replace="~{fragments/schema :: codeblock('res-' + ${ri.index} + '-' + ${ci.index}, ${c.sample})}"></th:block>
+                            </div>
+                        </div>
+                        <p class="rf-muted rf-small mb-0" th:if="${r.contents.isEmpty()}"><th:block th:text="#{ui.no.body}">No body.</th:block></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+
+            <div class="rf-panel mb-3" data-panel="security">
+                <button type="button" class="rf-panel-header rf-panel-toggle" aria-expanded="true">
+                    <i class="bi bi-shield-lock"></i> <th:block th:text="#{ui.authentication}">Authentication</th:block>
+                    <i class="bi bi-chevron-up rf-muted ms-auto" data-panel-caret></i>
+                </button>
+                <div class="rf-panel-body">
+                    <div th:if="${!view.security.isEmpty()}">
+                        <div class="mb-2" th:each="s : ${view.security}">
+                            <div><code th:text="${s.name}"></code>
+                                <span class="rf-chip" th:if="${s.type != null}" th:text="${s.type}"></span>
+                                <span class="rf-chip" th:if="${s.scheme != null}" th:text="${s.scheme}"></span>
+                                <span class="rf-chip" th:if="${s.location != null}" th:text="'in ' + ${s.location}"></span>
+                            </div>
+                            <div class="rf-muted rf-small" th:if="${s.scopes != null}"
+                                 th:text="'scope: ' + ${s.scopes}"></div>
+                            <div class="rf-muted rf-small" th:if="${s.description != null}"
+                                 th:text="${s.description}"></div>
+                        </div>
+                    </div>
+                    <p class="rf-muted rf-small mb-0" th:if="${view.security.isEmpty()}">
+                        <th:block th:text="#{ui.no.authentication.requirements.declared.in.the.specification}">No authentication requirements declared in the specification.</th:block>
+                    </p>
+                </div>
+            </div>
+
+            <div class="rf-panel mb-3" data-panel="servers" th:if="${!view.servers.isEmpty()}">
+                <button type="button" class="rf-panel-header rf-panel-toggle" aria-expanded="true">
+                    <i class="bi bi-hdd-network"></i> <th:block th:text="#{ui.declared.servers}">Declared servers</th:block>
+                    <i class="bi bi-chevron-up rf-muted ms-auto" data-panel-caret></i>
+                </button>
+                <div class="rf-panel-body">
+                    <div class="rf-small" th:each="s : ${view.servers}">
+                        <code th:text="${s.url}"></code>
+                        <span class="rf-muted" th:if="${s.description != null}" th:text="' — ' + ${s.description}"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rf-panel mb-3" data-panel="curl" th:if="${!#strings.isEmpty(view.curl)}">
+                <button type="button" class="rf-panel-header rf-panel-toggle" aria-expanded="true">
+                    <i class="bi bi-terminal"></i> <th:block th:text="#{ui.curl.command}">cURL command</th:block>
+                    <i class="bi bi-chevron-up rf-muted ms-auto" data-panel-caret></i>
+                </button>
+                <div class="rf-panel-body">
+                    <th:block th:replace="~{fragments/schema :: codeblock('curl-cmd', ${view.curl})}"></th:block>
+                    <p class="form-text mb-0">
+                        <th:block th:text="#{ui.replace.values.between}">Replace values between</th:block> <code>&lt;…&gt;</code> <th:block th:text="#{ui.with.actual.data}">with actual data.</th:block>
+                    </p>
+                </div>
+            </div>
+
+            <div class="rf-panel mb-3" data-panel="test" th:if="${@perm.has('API_TEST')}">
+                <button type="button" class="rf-panel-header rf-panel-toggle" aria-expanded="true">
+                    <i class="bi bi-play-circle"></i> <th:block th:text="#{ui.try.the.request}">Try the request</th:block>
+                    <i class="bi bi-chevron-up rf-muted ms-auto" data-panel-caret></i>
+                </button>
+                <div class="rf-panel-body">
+                    <div class="alert alert-secondary py-2 rf-small mb-2" th:if="${endpoint.grpc}">
+                        <i class="bi bi-info-circle"></i>
+                        <th:block th:text="#{ui.this.is.a.grpc.method.the.http.console.can.only.be.used.if.a.rest.gate}">This is a gRPC method: the HTTP console can only be used if a REST gateway exists.</th:block>
+                    </div>
+                    <form th:action="@{/services/{sid}/endpoints/{eid}/test(sid=${service.id},eid=${endpoint.id})}"
+                          method="post" th:object="${testForm}">
+                        <input type="hidden" name="environmentId" th:if="${selectedEnvironmentId != null}"
+                               th:value="${selectedEnvironmentId}">
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <label class="form-label" for="method"><th:block th:text="#{ui.method}">Method</th:block></label>
+                                <select class="form-select form-select-sm" id="method" th:field="*{method}">
+                                    <option th:each="m : ${ {'GET','POST','PUT','PATCH','DELETE'} }" th:value="${m}"
+                                            th:text="${m}"></option>
+                                </select>
+                            </div>
+                            <div class="col-8">
+                                <label class="form-label" for="url">URL</label>
+                                <input class="form-control form-control-sm rf-mono" id="url" th:field="*{url}"
+                                       required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="queryParams">Query parameters</label>
+                                <textarea class="form-control form-control-sm rf-mono" id="queryParams"
+                                          th:field="*{queryParams}" rows="2"
+                                          th:placeholder="#{ui.name.value.one.per.line}"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="headers">Headers</label>
+                                <textarea class="form-control form-control-sm rf-mono" id="headers"
+                                          th:field="*{headers}" rows="3"
+                                          placeholder="Authorization: Bearer …"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="body">Body</label>
+                                <textarea class="form-control form-control-sm rf-mono" id="body"
+                                          th:field="*{body}" rows="6"></textarea>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mt-2">
+                            <button class="btn btn-sm btn-primary" type="submit">
+                                <i class="bi bi-send"></i> <th:block th:text="#{ui.execute}">Execute</th:block>
+                            </button>
+                            <a class="btn btn-sm btn-link ms-auto"
+                               th:href="@{/test(serviceId=${service.id},endpointId=${endpoint.id})}">
+                                <th:block th:text="#{ui.open.full.console}">Open full console</th:block>
+                            </a>
+                        </div>
+                    </form>
+
+                    <div id="test-result" class="mt-3" data-panel-keep-open th:if="${response != null}">
+                        <th:block th:replace="~{test/result :: result}"></th:block>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rf-panel" data-panel="comments">
+                <button type="button" class="rf-panel-header rf-panel-toggle" aria-expanded="true">
+                    <i class="bi bi-chat-left-text"></i> <th:block th:text="#{ui.notes.on.this.endpoint}">Notes on this endpoint</th:block>
+                    <span class="badge text-bg-secondary" th:text="${comments.size()}">0</span>
+                    <i class="bi bi-chevron-up rf-muted ms-auto" data-panel-caret></i>
+                </button>
+                <div class="list-group list-group-flush" th:if="${!comments.isEmpty()}">
+                    <div class="list-group-item" th:each="c : ${comments}">
+                        <div class="rf-small rf-muted">
+                            <strong th:text="${c.authorLabel != null} ? ${c.authorLabel} : #{ui.anonymous}"></strong> ·
+                            <span th:text="${#temporals.format(c.createdAt.atZone(T(java.time.ZoneId).systemDefault()), #messages.msg('format.datetime.short'))}"></span>
+                        </div>
+                        <div th:text="${c.body}"></div>
+                    </div>
+                </div>
+                <p class="rf-muted rf-small px-3 pt-3 mb-0" th:if="${comments.isEmpty()}"><th:block th:text="#{ui.no.notes}">No notes.</th:block></p>
+                <div class="rf-panel-body border-top" th:if="${@perm.hasOnService('COMMENT_WRITE', service)}">
+                    <form th:action="@{/services/{id}/comments(id=${service.id})}" method="post">
+                        <input type="hidden" name="endpointId" th:value="${endpoint.id}">
+                        <textarea class="form-control form-control-sm mb-2" name="body" rows="2" required
+                                  th:placeholder="#{ui.e.g.do.not.use.after.version.2.1}"></textarea>
+                        <button class="btn btn-sm btn-outline-primary" type="submit">
+                            <i class="bi bi-send"></i> <th:block th:text="#{ui.post}">Post</th:block>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>
