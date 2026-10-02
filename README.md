@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🐟 Red Fish API Catalog
+# <img src="src/main/resources/static/img/favicon.svg" width="32" height="32" alt="Red Fish icon"> Red Fish API Catalog
 
-**Un punto di riferimento per scoprire, documentare e provare le API del tuo team.**
+**A central place to discover, document, and test your team's APIs.**
 
-REST · gRPC · OpenAPI · Versionamento · Test API
+REST · gRPC · OpenAPI · Versioning · API Testing
 
 Java 21 · Spring Boot 3.4 · PostgreSQL
 
@@ -12,211 +12,173 @@ Java 21 · Spring Boot 3.4 · PostgreSQL
 
 ---
 
-Red Fish API Catalog raccoglie servizi, specifiche e informazioni operative in un unico portale. Organizza le API per area, esplora endpoint e modelli, confronta le revisioni e prova le chiamate HTTP direttamente dall'interfaccia.
+Red Fish API Catalog brings services, specifications, and operational information together in one portal. Organize APIs by area, explore endpoints and models, compare revisions, and try HTTP requests directly from the interface.
 
-L'applicazione si distribuisce come **un singolo JAR**, con asset frontend inclusi e persistenza su PostgreSQL. Non richiede una build Node.js né un'infrastruttura a container.
+The application ships as **a single JAR**, with frontend assets included and PostgreSQL persistence. It requires neither a Node.js build nor container infrastructure.
 
-## Cosa puoi fare
+## Features
 
-| Area | Funzionalità |
+| Area | Features |
 | --- | --- |
-| **Organizzare** | Gruppi e sottogruppi gerarchici, servizi REST/gRPC, tag, referenti e documentazione. |
-| **Importare** | Specifiche Swagger/OpenAPI 2.0 e OpenAPI 3.x in JSON o YAML, file `.proto`, da upload o URL HTTP/HTTPS. |
-| **Esplorare** | Endpoint, parametri, request body, risposte, autenticazione, schemi ad albero ed esempi generati. |
-| **Navigare i modelli** | Schede dei modelli, riferimenti incrociati e filtro dei modelli usati da un endpoint. |
-| **Versionare** | Storico delle revisioni, selezione della versione corrente, download dell'originale e diff di endpoint e modelli. |
-| **Provare** | Console HTTP con header, parametri e body; risposta con status, durata e dimensione; generazione di comandi cURL. |
-| **Seguire i servizi** | Ambienti multipli, health check periodici, link esterni, preferiti e commenti su servizi ed endpoint. |
-| **Gestire gli accessi** | Ruoli ADMIN, EDITOR e VIEWER, ruoli personalizzati, permessi per gruppo e audit delle operazioni. |
+| **Organize** | Hierarchical groups and subgroups, REST/gRPC services, tags, contacts, and documentation. |
+| **Import** | Swagger/OpenAPI 2.0 and OpenAPI 3.x specifications in JSON or YAML, and `.proto` files, uploaded or fetched from HTTP/HTTPS URLs. |
+| **Explore** | Endpoints, parameters, request bodies, responses, authentication, schema trees, and generated examples. |
+| **Browse models** | Model details, cross-references, and filtering by models used by an endpoint. |
+| **Version** | Revision history, current version selection, original file downloads, and endpoint and model diffs. |
+| **Test** | HTTP console with headers, parameters, and request bodies; response status, duration, and size; cURL command generation. |
+| **Monitor services** | Multiple environments, periodic health checks, external links, favorites, and comments on services and endpoints. |
+| **Manage access** | ADMIN, EDITOR, and VIEWER roles, custom roles, group permissions, and operation auditing. |
 
-La ricerca globale offre filtri per gruppo e sottogruppi, tipo e stato del servizio, con pagine da 20 risultati per sezione e limiti applicati dal database. La dashboard evidenzia ambienti non raggiungibili, servizi senza referenti e servizi senza un ambiente con URL, con collegamenti alle rispettive schede. Nome, logo e impostazioni operative sono personalizzabili dall'interfaccia, che include anche il tema scuro.
+Global search supports filters for groups and subgroups, service type, and service status, with 20 results per section per page and limits applied by the database. The dashboard highlights unreachable environments, services without contacts, and services without an environment URL, linking to their details. The application name, logo, and operational settings can be customized from the interface, which also includes a dark theme.
 
-### Dal contratto alla chiamata
+### From contract to request
 
-1. **Crea la struttura** del catalogo per dominio, team o area applicativa.
-2. **Importa una specifica** e consulta gli endpoint e i modelli estratti.
-3. **Aggiungi gli ambienti** del servizio, i referenti e i collegamenti utili.
-4. **Prova una chiamata HTTP** oppure copia il comando generato.
-5. **Importa una nuova revisione** e confrontala con la precedente.
+1. **Create the catalog structure** by domain, team, or application area.
+2. **Import a specification** and browse the extracted endpoints and models.
+3. **Add service environments**, contacts, and useful links.
+4. **Try an HTTP request** or copy the generated command.
+5. **Import a new revision** and compare it with the previous one.
 
-La console esegue richieste HTTP dal server applicativo. Console e cURL utilizzano l'URL completo dell'ambiente selezionato; in modalità automatica viene scelto il primo ambiente con URL, altrimenti il primo server HTTP/HTTPS assoluto della specifica. Gli URL con variabili non risolte e i server relativi richiedono un URL di ambiente esplicito. Se manca un indirizzo, la console richiede l'URL completo e non genera un comando verso un host predefinito.
+The console sends HTTP requests from the application server. Both the console and cURL use the full URL of the selected environment. In automatic mode, the first environment with a URL is selected; otherwise, the first absolute HTTP/HTTPS server URL in the specification is used. URLs with unresolved variables and relative server URLs require an explicit environment URL. If no address is available, the console asks for the full URL and does not generate a command targeting a default host.
 
-Il confronto delle revisioni evidenzia separatamente modifiche potenzialmente incompatibili: endpoint e modelli rimossi, nuovi parametri o corpi obbligatori, cambi di tipo, campi eliminati ed enum ristretti, anche negli schemi annidati. Si tratta di un aiuto alla revisione, non di una certificazione completa di compatibilità.
+Revision comparisons separately highlight potentially breaking changes: removed endpoints and models, new required parameters or request bodies, type changes, removed fields, and narrowed enums, including those in nested schemas. This helps with reviews but does not provide a complete compatibility certification.
 
-Per gRPC sono disponibili la consultazione dei contratti e la generazione di comandi `grpcurl`; la console HTTP non esegue RPC gRPC.
+For gRPC, contract browsing and `grpcurl` command generation are available; the HTTP console does not execute gRPC calls.
 
-## Avvio rapido
+## Quick start
 
-### Prerequisiti
+### Prerequisites
 
 - **JDK 21**.
-- **Maven 3.9+** per compilare il progetto.
-- **PostgreSQL** raggiungibile e un database dedicato.
+- **Maven 3.9+** to build the project.
+- A reachable **PostgreSQL** server and a dedicated database.
 
-### 1. Crea il database
+### 1. Create the database
 
-Da una sessione PostgreSQL con i permessi necessari:
+From a PostgreSQL session with the required permissions:
 
 ```sql
 CREATE DATABASE redfish_catalog ENCODING 'UTF8';
 ```
 
-Flyway crea lo schema e i dati iniziali al primo avvio.
+Flyway creates the schema and initial data on the first startup.
 
-### 2. Compila
+### 2. Build
 
-Dalla directory del progetto:
+From the project directory:
 
 ```sh
 mvn clean package
 ```
 
-Il comando esegue i test e produce `target/red-fish-api-catalog.jar`.
+This command runs the tests and produces `target/red-fish-api-catalog.jar`.
 
-### 3. Configura e avvia
+### 3. Configure and run
 
-Con i valori predefiniti, l'applicazione si collega a PostgreSQL su `localhost:5432`, database `redfish_catalog`, con utente e password `postgres`.
+By default, the application connects to PostgreSQL at `localhost:5432`, using the `redfish_catalog` database and `postgres` as both username and password.
 
 ```sh
 java -jar target/red-fish-api-catalog.jar
 ```
 
-Per impostare credenziali diverse, in PowerShell:
-
-```powershell
-$env:DB_USER = 'catalog'
-$env:DB_PASSWORD = 'la-tua-password'
-java -jar target/red-fish-api-catalog.jar
-```
-
-Oppure in una shell POSIX:
+To use different credentials, set the `DB_USER` and `DB_PASSWORD` environment variables before starting the application. For example, in a POSIX shell:
 
 ```sh
-DB_USER=catalog DB_PASSWORD='la-tua-password' java -jar target/red-fish-api-catalog.jar
+DB_USER=catalog DB_PASSWORD='your-password' java -jar target/red-fish-api-catalog.jar
 ```
 
-### 4. Completa il primo accesso
+### 4. Complete the initial setup
 
-Apri [localhost:8080](http://localhost:8080). Il wizard iniziale permette di:
+Open [localhost:8080](http://localhost:8080). The initial setup wizard lets you:
 
-1. scegliere il nome dell'applicazione e creare il primo amministratore;
-2. verificare il riepilogo e generare, facoltativamente, una struttura di gruppi di esempio.
+1. Choose the application name and create the first administrator.
+2. Review the summary and optionally generate a sample group structure.
 
-Al termine il wizard viene disabilitato e il catalogo è pronto per il primo import.
+Once completed, the wizard is disabled and the catalog is ready for its first import.
 
-### Specifiche di esempio
+### Sample specifications
 
-| File | Contenuto |
+| File | Contents |
 | --- | --- |
-| [payments-sepa-openapi3.yaml](examples/payments-sepa-openapi3.yaml) | API REST per pagamenti SEPA, con parametri, enum, riferimenti agli schemi e autenticazione bearer. |
-| [notification-v1.proto](examples/notification-v1.proto) | Servizio gRPC di notifica con message, enum, `oneof` e RPC unarie e streaming. |
+| [payments-sepa-openapi3.yaml](examples/payments-sepa-openapi3.yaml) | REST API for SEPA payments, with parameters, enums, schema references, and bearer authentication. |
+| [notification-v1.proto](examples/notification-v1.proto) | gRPC notification service with messages, enums, `oneof`, and unary and streaming RPCs. |
 
-Dalla voce **Importa specifica**, scegli il gruppo di destinazione e carica uno dei file.
+Use the specification import option (**Importa specifica**), select the target group, and upload one of these files.
 
-## Configurazione
+## Configuration
 
-Le principali variabili d'ambiente sono definite in [application.yml](src/main/resources/application.yml).
+The main environment variables are defined in [application.yml](src/main/resources/application.yml).
 
-| Variabile | Default | Scopo |
+| Variable | Default | Purpose |
 | --- | --- | --- |
-| `DB_HOST` | `localhost` | Host PostgreSQL. |
-| `DB_PORT` | `5432` | Porta PostgreSQL. |
-| `DB_NAME` | `redfish_catalog` | Nome del database. |
-| `DB_USER` | `postgres` | Utente del database. |
-| `DB_PASSWORD` | `postgres` | Password del database. |
-| `PORT` | `8080` | Porta HTTP dell'applicazione. |
-| `CATALOG_STORAGE` | `data/storage` | Directory dei file caricati, come il logo. |
-| `THYMELEAF_CACHE` | `true` | Cache dei template; impostare `false` in sviluppo. |
+| `DB_HOST` | `localhost` | PostgreSQL host. |
+| `DB_PORT` | `5432` | PostgreSQL port. |
+| `DB_NAME` | `redfish_catalog` | Database name. |
+| `DB_USER` | `postgres` | Database username. |
+| `DB_PASSWORD` | `postgres` | Database password. |
+| `PORT` | `8080` | Application HTTP port. |
+| `CATALOG_STORAGE` | `data/storage` | Directory for uploaded files, such as the logo. |
+| `THYMELEAF_CACHE` | `true` | Template cache; set to `false` during development. |
 
-Le impostazioni amministrative consentono di modificare nome, logo, limite di upload, timeout dei test API e intervallo dei controlli di salute. Il limite applicativo iniziale per gli upload è 10 MiB; i limiti multipart configurati sono 20 MB per file e 24 MB per richiesta.
+Administrative settings let you change the name, logo, upload limit, API test timeout, and health check interval. The initial application upload limit is 10 MiB; the configured multipart limits are 20 MB per file and 24 MB per request.
 
-Gli import da URL, i test API e gli health check utilizzano la connettività del server su cui gira il catalogo. Gli asset Bootstrap e le icone sono inclusi nel JAR tramite WebJars.
+URL imports, API tests, and health checks use the network connectivity of the server running the catalog. Bootstrap assets and icons are included in the JAR through WebJars.
 
-## Architettura
+## Architecture
 
-L'interfaccia è renderizzata lato server con Spring MVC e Thymeleaf. La logica applicativa gestisce import, versionamento, permessi e controlli dei servizi; Spring Data JPA persiste i dati su PostgreSQL.
+The interface is rendered on the server using Spring MVC and Thymeleaf. Application logic handles imports, versioning, permissions, and service checks; Spring Data JPA persists data in PostgreSQL.
 
-| Componente | Tecnologia |
+| Component | Technology |
 | --- | --- |
-| Runtime e backend | Java 21, Spring Boot 3.4.5, Spring MVC |
-| Interfaccia | Thymeleaf, Bootstrap 5.3.3, Bootstrap Icons, JavaScript e CSS |
-| Sicurezza | Spring Security, password BCrypt, sessioni e protezione CSRF |
-| Persistenza | Spring Data JPA, PostgreSQL, Flyway |
-| Parsing | Swagger Parser e parser dedicato per i file proto |
-| Build e test | Maven, JUnit, Mockito, Spring MockMvc |
+| Runtime and backend | Java 21, Spring Boot 3.4.5, Spring MVC |
+| Interface | Thymeleaf, Bootstrap 5.3.3, Bootstrap Icons, JavaScript, and CSS |
+| Security | Spring Security, BCrypt passwords, sessions, and CSRF protection |
+| Persistence | Spring Data JPA, PostgreSQL, Flyway |
+| Parsing | Swagger Parser and a dedicated proto file parser |
+| Build and testing | Maven, JUnit, Mockito, Spring MockMvc |
 
 ```text
 src/main/java/it/fn/redfish/catalog/
-├── config/       Configurazione applicativa e sicurezza
-├── domain/       Entità JPA ed enumerazioni
-├── repo/         Repository Spring Data
-├── security/     Autenticazione, permessi e filtri di accesso
-├── service/      Logica applicativa
-├── spec/         Parsing delle specifiche e rendering degli schemi
-├── support/      Utilità ed eccezioni
-└── web/          Controller MVC e form
+├── config/       Application and security configuration
+├── domain/       JPA entities and enums
+├── repo/         Spring Data repositories
+├── security/     Authentication, permissions, and access filters
+├── service/      Application logic
+├── spec/         Specification parsing and schema rendering
+├── support/      Utilities and exceptions
+└── web/          MVC controllers and forms
 
 src/main/resources/
-├── db/migration/ Migrazioni SQL e dati iniziali
-├── static/       CSS, JavaScript e immagini
-└── templates/    Pagine e frammenti Thymeleaf
+├── db/migration/ SQL migrations and initial data
+├── static/       CSS, JavaScript, and images
+└── templates/    Thymeleaf pages and fragments
 
-src/test/         Test automatici e fixture
-examples/         Specifiche pronte per l'import
-scripts/          Verifiche end-to-end in PowerShell
+src/test/         Automated tests and fixtures
+examples/         Specifications ready to import
 ```
 
-I permessi assegnati a un gruppo valgono anche per i suoi discendenti. Il sistema impedisce di lasciare l'installazione senza amministratori attivi e registra le operazioni tramite audit.
+Permissions assigned to a group also apply to its descendants. The system prevents an installation from being left without active administrators and records operations in an audit log.
 
-## Sviluppo e verifiche
+## Development and verification
 
-### Test automatici
+### Automated tests
 
 ```sh
 mvn test
 ```
 
-La suite copre parser, schemi, riferimenti fra modelli, diff, generazione cURL, servizi e controller MVC. I test unitari e MockMvc non richiedono un database PostgreSQL attivo.
+The suite covers parsers, schemas, model references, diffs, cURL generation, services, and MVC controllers. Unit and MockMvc tests do not require a running PostgreSQL database.
 
-### Avvio in sviluppo
+### Development startup
 
 ```sh
 mvn spring-boot:run
 ```
 
-Per disabilitare la cache dei template, impostare `THYMELEAF_CACHE=false` prima dell'avvio. Su Windows è disponibile anche:
+To disable template caching, set `THYMELEAF_CACHE=false` before starting the application.
 
-```powershell
-.\run-dev.ps1 -Port 8080
-```
+### Existing databases
 
-Lo script disabilita la cache dei template, compila e avvia l'applicazione dal classpath. Usa Maven in modalità offline: le dipendenze devono essere già presenti nella cache locale. Dopo una modifica alle dipendenze del POM, rigenera il classpath:
+The `V2__remove_global_api_url.sql` migration removes the obsolete `app.base.url` setting. Individual environment URLs remain available; Flyway applies the migration on the next startup.
 
-```powershell
-mvn dependency:build-classpath "-Dmdep.outputFile=target\cp.txt" "-Dmdep.includeScope=runtime"
-```
-
-### Verifiche end-to-end
-
-Gli script PowerShell in `scripts/` verificano setup, import, navigazione, permessi, test API e health check su un'applicazione reale.
-
-**Gli script seguenti eliminano e ricreano il database indicato da `-Database` (default `redfish_catalog`) e arrestano eventuali processi in ascolto sulla porta selezionata. Usarli esclusivamente in un ambiente di test dedicato.** Richiedono PostgreSQL e `psql`, oppure un container PostgreSQL accessibile tramite Docker; il parametro `-DockerContainer` ha valore predefinito `postgres`.
-
-```powershell
-.\scripts\reset-and-test.ps1
-```
-
-Per verificare il JAR, dopo `mvn clean package`:
-
-```powershell
-.\scripts\verify-jar.ps1
-```
-
-I blocchi `smoke-setup.ps1`, `smoke-full.ps1`, `smoke-extra.ps1` e `smoke-health.ps1` sono disponibili anche separatamente. Modificano i dati del catalogo; quello di setup richiede un'installazione non ancora configurata.
-
-### Database esistenti
-
-La migrazione `V2__remove_global_api_url.sql` elimina l'impostazione obsoleta `app.base.url`. Gli URL dei singoli ambienti restano disponibili; Flyway applica la migrazione al successivo avvio.
-
-
-La rimozione dei commenti dalla migrazione `V1__init.sql` ne modifica il checksum Flyway. Su installazioni che l'hanno già applicata, verificare la corrispondenza dello schema e riallineare la cronologia con la procedura Flyway `repair` prima dell'avvio. Su un database nuovo non è necessario alcun intervento.
+Removing comments from the `V1__init.sql` migration changes its Flyway checksum. For installations that have already applied it, verify that the schema matches and reconcile the migration history using Flyway's `repair` procedure before startup. No action is required for a new database.
