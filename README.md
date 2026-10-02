@@ -94,7 +94,15 @@ Open [localhost:8080](http://localhost:8080). The initial setup wizard lets you:
 1. Choose the application name and create the first administrator.
 2. Review the summary and optionally generate a sample group structure.
 
+The first step collects the application name and the administrator's username, email, first name, last name, and password (at least eight characters), plus password confirmation. Use the **English** and **Italiano** links to select the interface language.
+
+![Initial setup: application details and first administrator](docs/screenshots/initial-setup.jpg)
+
 Once completed, the wizard is disabled and the catalog is ready for its first import.
+
+Sign in with the administrator credentials created during setup.
+
+![Sign in to the catalog](docs/screenshots/login.jpg)
 
 ### Sample specifications
 
@@ -103,7 +111,33 @@ Once completed, the wizard is disabled and the catalog is ready for its first im
 | [payments-sepa-openapi3.yaml](examples/payments-sepa-openapi3.yaml) | REST API for SEPA payments, with parameters, enums, schema references, and bearer authentication. |
 | [notification-v1.proto](examples/notification-v1.proto) | gRPC notification service with messages, enums, `oneof`, and unary and streaming RPCs. |
 
-Use the specification import option (**Importa specifica**), select the target group, and upload one of these files.
+Use **Import specification**, select the target group, and upload one of these files.
+
+## A tour of the catalog
+
+### Dashboard
+
+After signing in, the dashboard shows catalog counters, recent imports, recently updated services, and services that need contacts or environment URLs. Use the sidebar to browse the catalog or **Import specification** to add your first service.
+
+![Dashboard after signing in](docs/screenshots/main-page.png)
+
+### Import a specification
+
+Choose a destination group to create a new service, or select an existing service to add a revision. Upload a Swagger/OpenAPI file or provide its HTTP/HTTPS URL, then optionally add tags and revision notes and choose whether to make the revision current.
+
+![Specification import: destination, source, and revision options](docs/screenshots/import-page.png)
+
+### Browse an imported service
+
+The service page lists the endpoints and models extracted from the specification. It also provides access to revisions and the original specification, alongside sections for environments, links, contacts, and comments. This example shows the imported Pet Store API.
+
+![Imported Pet Store service with endpoints, models, and environment settings](docs/screenshots/api-page.png)
+
+### Explore an endpoint
+
+Open an endpoint to inspect its description, authentication requirements, request body, and referenced models. The HTTP console lets you enter a URL, query parameters, headers, and a request body. Configure an environment URL or enter the full URL in the console before trying the request.
+
+![POST /pet endpoint details and HTTP request console](docs/screenshots/detail-api-page.PNG)
 
 ## Configuration
 
