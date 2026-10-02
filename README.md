@@ -16,6 +16,8 @@ Red Fish API Catalog brings services, specifications, and operational informatio
 
 The application ships as **a single JAR**, with frontend assets included and PostgreSQL persistence. It requires neither a Node.js build nor container infrastructure.
 
+![Intro](docs/screenshots/intro.gif)
+
 ## Features
 
 | Area | Features |
