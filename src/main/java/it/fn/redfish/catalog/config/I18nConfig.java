@@ -19,9 +19,11 @@ public class I18nConfig implements WebMvcConfigurer {
         var resolver = new CookieLocaleResolver("catalog-language") {
             @Override
             public org.springframework.context.i18n.LocaleContext resolveLocaleContext(jakarta.servlet.http.HttpServletRequest request) {
-                Locale locale = super.resolveLocaleContext(request).getLocale();
-                return new org.springframework.context.i18n.SimpleLocaleContext(
-                        locale != null && "it".equals(locale.getLanguage()) ? Locale.ITALIAN : Locale.ENGLISH);
+                var context = super.resolveLocaleContext(request);
+                return () -> {
+                    Locale locale = context.getLocale();
+                    return locale != null && "it".equals(locale.getLanguage()) ? Locale.ITALIAN : Locale.ENGLISH;
+                };
             }
         };
         resolver.setDefaultLocale(Locale.ENGLISH);

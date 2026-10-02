@@ -15,14 +15,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.web.util.HtmlUtils;
+import it.fn.redfish.catalog.config.SecurityConfig;
+import it.fn.redfish.catalog.security.LoginSuccessHandler;
 import it.fn.redfish.catalog.service.*;
 import it.fn.redfish.catalog.security.PermissionEvaluator;
 
 @WebMvcTest({HomeController.class, SetupController.class, SearchController.class})
+@Import(SecurityConfig.class)
 @WithMockUser
 class I18nIntegrationTest {
     @Autowired MockMvc mvc;
@@ -32,6 +37,7 @@ class I18nIntegrationTest {
     @MockitoBean FavoriteService favorites;
     @MockitoBean GroupService groups;
     @MockitoBean SearchService search;
+    @MockitoBean LoginSuccessHandler loginSuccessHandler;
     @MockitoBean(name = "perm") PermissionEvaluator perm;
 
     @BeforeEach
@@ -88,7 +94,8 @@ class I18nIntegrationTest {
                 .doesNotContain("{message.", "??");
         String italian = mvc.perform(post("/setup/step1").with(csrf()).param("appName", "").param("lang", "it"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        assertThat(italian).contains("Il nome dell'applicazione è obbligatorio", "La password è obbligatoria")
+        assertThat(HtmlUtils.htmlUnescape(italian))
+                .contains("Il nome dell'applicazione è obbligatorio", "La password è obbligatoria")
                 .doesNotContain("{message.", "??");
     }
 
