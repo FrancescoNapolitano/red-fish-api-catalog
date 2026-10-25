@@ -55,6 +55,8 @@ class I18nIntegrationTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         assertThat(html).contains("lang=\"en\"", "Global search", "Services without a contact", "Catalogo aziendale")
                 .doesNotContain("Ricerca globale", "??ui.");
+        assertThat(html).contains("id=\"rf-confirm-modal\"", "Confirm operation",
+                "aria-describedby=\"rf-confirm-message\"", "data-uploading=\"Uploading and processing…\"");
     }
 
     @Test
@@ -63,6 +65,9 @@ class I18nIntegrationTest {
         var response = mvc.perform(get("/login").param("lang", "it"))
                 .andExpect(status().isOk()).andReturn().getResponse();
         assertThat(response.getContentAsString(StandardCharsets.UTF_8)).contains("Accedi al catalogo", "lang=\"it\"");
+        assertThat(response.getContentAsString(StandardCharsets.UTF_8))
+                .contains("id=\"rf-confirm-modal\"", "Conferma operazione", "Caricamento ed elaborazione in corso…")
+                .doesNotContain("??ui.");
         Cookie cookie = response.getCookie("catalog-language");
         assertThat(cookie).isNotNull();
         assertThat(cookie.getMaxAge()).isGreaterThan(0);

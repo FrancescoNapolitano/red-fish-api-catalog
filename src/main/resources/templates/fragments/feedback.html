@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="feedback">
+    <div id="rf-operation-status" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"
+         th:attr="data-saving=#{ui.feedback.saving},data-uploading=#{ui.feedback.uploading},data-deleting=#{ui.feedback.deleting}"></div>
+    <div class="modal fade" id="rf-confirm-modal" tabindex="-1" aria-hidden="true"
+         aria-labelledby="rf-confirm-title" aria-describedby="rf-confirm-message">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="rf-confirm-title" th:text="#{ui.feedback.confirm.title}">Confirm operation</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" th:aria-label="#{ui.close}"></button>
+                </div>
+                <div class="modal-body"><p class="mb-0" id="rf-confirm-message"></p></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="rf-confirm-cancel" th:text="#{ui.cancel}">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="rf-confirm-accept"
+                            th:attr="data-delete-label=#{ui.delete},data-confirm-label=#{ui.feedback.confirm}">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

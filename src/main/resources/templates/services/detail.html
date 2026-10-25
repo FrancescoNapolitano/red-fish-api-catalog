@@ -251,7 +251,7 @@
                         <span class="rf-muted rf-small" th:if="${l.kind != null}" th:text="${l.kind}"></span>
                         <form class="ms-auto" method="post" th:if="${@perm.hasOnService('SERVICE_EDIT', service)}"
                               th:action="@{/services/{sid}/links/{lid}/delete(sid=${service.id},lid=${l.id})}">
-                            <button class="btn btn-sm btn-link text-danger py-0" type="submit">
+                            <button class="btn btn-sm btn-link text-danger py-0" type="submit" th:data-confirm="#{ui.feedback.remove.link}" th:aria-label="#{ui.feedback.remove.link}">
                                 <i class="bi bi-x-lg"></i>
                             </button>
                         </form>
@@ -303,7 +303,7 @@
                         </div>
                         <form method="post" th:if="${@perm.hasOnService('SERVICE_EDIT', service)}"
                               th:action="@{/services/{sid}/contacts/{cid}/delete(sid=${service.id},cid=${c.id})}">
-                            <button class="btn btn-sm btn-link text-danger py-0" type="submit">
+                            <button class="btn btn-sm btn-link text-danger py-0" type="submit" th:data-confirm="#{ui.remove.this.contact}" th:aria-label="#{ui.remove.this.contact}">
                                 <i class="bi bi-x-lg"></i>
                             </button>
                         </form>

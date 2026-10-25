@@ -729,3 +729,15 @@ a.rf-chip:focus-visible {
     background: rgba(178, 106, 0, .12);
     border-left: 3px solid #b26a00;
 }
+.btn[aria-disabled="true"], .dropdown-item[aria-disabled="true"] {
+    opacity: .65;
+    cursor: wait;
+}
+
+#rf-confirm-message {
+    overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .spinner-border { animation: none; }
+}
